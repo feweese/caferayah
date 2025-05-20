@@ -68,10 +68,10 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <div className="relative h-[300px] md:h-[500px] bg-gradient-to-br from-amber-50 to-amber-200 rounded-lg flex items-center justify-center">
-              <Coffee className="h-32 w-32 text-amber-800 opacity-50" />
-              <div className="absolute bottom-8 left-8 right-8 text-center bg-background/80 p-4 rounded-lg backdrop-blur-sm">
-                <p className="text-amber-800 font-medium">Premium coffee, exceptional experience</p>
+            <div className="relative h-[300px] md:h-[500px] bg-gradient-to-r from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800 rounded-lg flex items-center justify-center shadow-sm">
+              <Coffee className="h-32 w-32 text-primary opacity-50" />
+              <div className="absolute bottom-8 left-8 right-8 text-center bg-background/80 dark:bg-zinc-900/80 p-4 rounded-lg backdrop-blur-sm shadow-sm">
+                <p className="text-foreground font-medium">Premium coffee, exceptional experience</p>
               </div>
             </div>
           </div>
