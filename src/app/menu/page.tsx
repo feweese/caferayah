@@ -75,12 +75,11 @@ export default function MenuPage() {
   return (
     <MainLayout>
       <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8 animate-fadeIn">
-        {/* Hero Section with background */}
-        <div className="relative mb-16 rounded-2xl overflow-hidden bg-gradient-to-r from-amber-900/90 to-amber-700/90 shadow-xl">
-          <div className="absolute inset-0 bg-[url('/images/menu-bg.jpg')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
-          <div className="relative py-12 px-6 text-center text-white">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Menu</h1>
-            <p className="text-lg max-w-2xl mx-auto mb-0 opacity-90">
+        {/* Hero Section with background - admin dashboard style */}
+        <div className="flex flex-col items-center mb-16 bg-gradient-to-r from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800 p-6 rounded-lg shadow-sm">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 animate-fadeIn">Our Menu</h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
               Explore our handcrafted beverages, prepared with premium ingredients
               and passion
             </p>
