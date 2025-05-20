@@ -16,8 +16,8 @@ export function Providers({ children }: ProvidersProps) {
     <SessionProvider>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        enableSystem
+        defaultTheme="light"
+        enableSystem={false}
       >
         <SocketProvider>
           <NotificationProvider>
