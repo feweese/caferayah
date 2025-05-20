@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String
+  email         String          @unique
+  emailVerified DateTime?
+  password      String?
+  role          UserRole        @default(CUSTOMER)
+  image         String?
+  address       String?
+  phoneNumber   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  accounts      Account[]
+  points        LoyaltyPoints?
+  orders        Order[]
+  pointsHistory PointsHistory[]
+  reviews       Review[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Product {
+  id           String          @id @default(cuid())
+  name         String
+  description  String
+  category     ProductCategory
+  basePrice    Float
+  images       String[]
+  temperatures Temperature[]
+  sizes        Size[]
+  inStock      Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  sizePricing  Json?
+  featured     Boolean         @default(false)
+  addons       Addon[]
+  orderItems   OrderItem[]
+  reviews      Review[]
+}
+
+model Addon {
+  id         String      @id @default(cuid())
+  name       String
+  price      Float
+  inStock    Boolean     @default(true)
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[] @relation("AddonToOrderItem")
+}
+
+model Order {
+  id              String         @id @default(cuid())
+  userId          String
+  status          OrderStatus    @default(RECEIVED)
+  total           Float
+  deliveryMethod  DeliveryMethod
+  deliveryAddress String?
+  deliveryFee     Float          @default(0)
+  paymentMethod   PaymentMethod
+  paymentProofUrl String?
+  paymentStatus   PaymentStatus  @default(PENDING)
+  pointsUsed      Int            @default(0)
+  pointsEarned    Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  contactNumber   String?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  user            User           @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  reviews         Review[]
+  statusHistory   OrderStatusHistory[]
+}
+
+model OrderItem {
+  id          String      @id @default(cuid())
+  orderId     String
+  productId   String
+  size        Size
+  temperature Temperature
+  quantity    Int
+  price       Float
+  addonsJson  String?
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id])
+  addons      Addon[]     @relation("AddonToOrderItem")
+}
+
+model LoyaltyPoints {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PointsHistory {
+  id        String       @id @default(cuid())
+  userId    String
+  action    PointsAction
+  points    Int
+  orderId   String?
+  expiresAt DateTime?
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  userId          String
+  productId       String
+  rating          Int
+  comment         String?
+  approved        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  rejected        Boolean  @default(false)
+  orderId         String
+  rejectionReason String?
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  CUSTOMER
+}
+
+enum ProductCategory {
+  COFFEE
+  BARISTA_DRINKS
+  MILK_TEA
+  MILK_SERIES
+  MATCHA_SERIES
+  SODA_SERIES
+}
+
+enum Temperature {
+  HOT
+  ICED
+  BOTH
+}
+
+enum Size {
+  SIXTEEN_OZ
+  TWENTY_TWO_OZ
+}
+
+enum OrderStatus {
+  RECEIVED
+  PREPARING
+  OUT_FOR_DELIVERY
+  READY_FOR_PICKUP
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliveryMethod {
+  DELIVERY
+  PICKUP
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  IN_STORE
+  GCASH
+}
+
+enum PointsAction {
+  EARNED
+  REDEEMED
+  EXPIRED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum NotificationType {
+  ORDER_STATUS
+  POINTS_EXPIRING
+  PROMOTION
+  REVIEW_STATUS
+  NEW_ORDER
+  LOW_STOCK
+  CUSTOMER_FEEDBACK
+  NEW_REVIEW
+  LOYALTY_POINTS
+  PAYMENT_VERIFICATION
+}

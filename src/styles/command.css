@@ -1,0 +1,141 @@
+:root {
+  --cmdk-shadow: 0 16px 70px rgb(0 0 0 / 20%);
+  --cmdk-border: rgba(0, 0, 0, 0.12);
+}
+
+.dark {
+  --cmdk-shadow: 0 16px 70px rgb(0 0 0 / 50%);
+  --cmdk-border: rgba(255, 255, 255, 0.08);
+}
+
+[cmdk-root] {
+  max-width: 640px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  border-radius: 12px;
+  border: 1px solid var(--cmdk-border);
+  box-shadow: var(--cmdk-shadow);
+  transition: transform 100ms ease;
+  overflow: hidden;
+}
+
+[cmdk-input] {
+  font-family: var(--font-sans);
+  border: none;
+  width: 100%;
+  font-size: 16px;
+  padding: 12px 16px;
+  outline: none;
+  background: var(--background);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+}
+
+[cmdk-input]::placeholder {
+  color: var(--muted-foreground);
+}
+
+[cmdk-list] {
+  padding: 8px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  transition: 100ms ease;
+  transition-property: height;
+}
+
+[cmdk-item] {
+  content-visibility: auto;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--foreground);
+  padding: 8px 10px;
+  margin: 2px 0;
+  user-select: none;
+  will-change: background, color;
+  transition-property: background, color;
+  transition-timing-function: ease;
+  transition-duration: 150ms;
+}
+
+[cmdk-item][aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+[cmdk-group-heading] {
+  user-select: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+}
+
+@keyframes loading-fade {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+[cmdk-loading] {
+  font-size: 13px;
+  animation: loading-fade 1s ease-in-out infinite;
+  color: var(--muted-foreground);
+}
+
+[cmdk-empty] {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  white-space: pre-wrap;
+  color: var(--muted-foreground);
+}
+
+.animate-in {
+  animation-duration: 200ms;
+  animation-timing-function: ease-out;
+  opacity: 1;
+}
+
+.zoom-in-90 {
+  animation-name: zoom-in;
+  transform-origin: center;
+}
+
+.fade-in-0 {
+  animation-name: fade-in;
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.9);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+} 
