@@ -89,7 +89,7 @@ export function GCashPayment({ onPaymentProofUploaded, isLoading, total }: GCash
             <DialogTrigger asChild>
               <button className="relative w-48 h-48 border rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
                 <Image 
-                  src="/images/gcash-qr.jpg" 
+                  src="/images/gcash-qrcode.png" 
                   alt="GCash QR Code" 
                   fill
                   className="object-contain"
@@ -99,16 +99,16 @@ export function GCashPayment({ onPaymentProofUploaded, isLoading, total }: GCash
                 </div>
               </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-auto">
+            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-auto">
               <DialogHeader>
                 <DialogTitle>GCash QR Code</DialogTitle>
                 <DialogDescription>
                   Scan this code with your GCash app to make payment.
                 </DialogDescription>
               </DialogHeader>
-              <div className="relative w-full max-w-full aspect-square mx-auto">
+              <div className="relative w-80 h-80 mx-auto">
                 <Image 
-                  src="/images/gcash-qr.jpg" 
+                  src="/images/gcash-qrcode.png" 
                   alt="GCash QR Code" 
                   fill
                   priority
