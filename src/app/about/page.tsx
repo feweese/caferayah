@@ -52,7 +52,7 @@ export default function AboutPage() {
               <h3 className="font-semibold text-lg mb-4">Sustainability</h3>
               <p className="text-muted-foreground">
                 We are committed to environmentally conscious practices, from our choice 
-                of suppliers to our packaging and waste management.
+                of suppliers to our packaging and waste management. 
               </p>
             </div>
           </div>
