@@ -260,6 +260,9 @@ export default function OrderDetailsPage({
     if (status === "authenticated" && session?.user?.id && orderId) {
       console.log("Initializing socket for order updates:", orderId);
       
+      let pollingInterval: NodeJS.Timeout | null = null;
+      let socketConnected = false;
+      
       const setupSocket = async () => {
         try {
           const socket = await socketClient.initialize(session.user.id);
@@ -275,16 +278,80 @@ export default function OrderDetailsPage({
             }
           });
           
+          socket.on('connect', () => {
+            console.log('Socket connected for order updates');
+            socketConnected = true;
+            
+            // If polling was started as a fallback, we can stop it now
+            if (pollingInterval) {
+              console.log('Socket connected, stopping polling fallback');
+              clearInterval(pollingInterval);
+              pollingInterval = null;
+            }
+          });
+          
+          socket.on('connect_error', (error) => {
+            console.error('Socket connect error:', error.message);
+            
+            // Start polling if socket fails to connect and polling isn't already active
+            if (!pollingInterval && !socketConnected) {
+              console.log('Starting polling fallback for order updates');
+              pollingInterval = setInterval(() => {
+                console.log('Polling for order updates');
+                fetchOrderDetails();
+              }, 10000); // Poll every 10 seconds
+            }
+          });
+          
+          // Start polling as a fallback anyway if we're on Vercel
+          // This ensures updates even if the socket connection seems fine but isn't working
+          const isVercelDeployment = window.location.origin.includes('vercel.app') || 
+                                    window.location.origin.includes('caferayah');
+          
+          if (isVercelDeployment) {
+            console.log('Vercel deployment detected, starting polling fallback');
+            pollingInterval = setInterval(() => {
+              console.log('Polling for order updates (Vercel fallback)');
+              fetchOrderDetails();
+            }, 10000); // Poll every 10 seconds on Vercel
+          }
+          
           return () => {
-            console.log("Cleaning up socket listeners");
+            console.log("Cleaning up socket listeners and polling interval");
             socket.off('notification');
+            socket.off('connect');
+            socket.off('connect_error');
+            
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              pollingInterval = null;
+            }
           };
         } catch (error) {
           console.error('Error initializing socket:', error);
+          
+          // Start polling as fallback if socket initialization fails
+          console.log('Starting polling fallback due to socket initialization failure');
+          pollingInterval = setInterval(() => {
+            console.log('Polling for order updates (fallback)');
+            fetchOrderDetails();
+          }, 10000); // Poll every 10 seconds
+          
+          return () => {
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              pollingInterval = null;
+            }
+          };
         }
       };
       
-      setupSocket();
+      const cleanup = setupSocket();
+      return () => {
+        if (cleanup && typeof cleanup === 'function') {
+          cleanup();
+        }
+      };
     }
   }, [status, session, orderId]);
 
