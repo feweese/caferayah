@@ -285,7 +285,8 @@ export async function PATCH(
             await createLoyaltyPointsNotification(
               existingOrder.userId,
               existingOrder.pointsEarned,
-              "EARNED"
+              'earned',
+              orderId
             );
           }
         });
