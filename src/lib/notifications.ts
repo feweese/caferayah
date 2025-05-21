@@ -20,7 +20,7 @@ export async function createOrderStatusNotification(
     switch (status) {
       case "RECEIVED":
         title = "Order Received";
-        message = `Your order #${orderIdShort} has been received and is being processed.`;
+        message = `Your order #${orderIdShort} has been successfully received. We'll begin preparing it shortly.`;
         break;
       case "PREPARING":
         title = "Order Being Prepared";

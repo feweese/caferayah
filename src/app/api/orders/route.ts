@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { createNewOrderNotification, createOrderStatusNotification, createLoyaltyPointsNotification, createPaymentVerificationNotification } from "@/lib/notifications";
+import { emitNotificationToUser } from "@/lib/socket-emitter";
 import { PaymentMethod, DeliveryMethod } from "@/types/types";
 
 // Order item schema
@@ -327,12 +328,39 @@ export async function POST(req: Request) {
         
         // If GCash payment, create payment verification notification for admins
         if (paymentMethod === PaymentMethod.GCASH) {
+          // Notification for admin verification
           for (const admin of adminUsers) {
             await createPaymentVerificationNotification(
               admin.id,
               simpleOrder.id,
               "NEW_PAYMENT"
             );
+          }
+          
+          // Additional GCash-specific notification for customer
+          await db.notification.create({
+            data: {
+              userId: session.user.id,
+              type: "PAYMENT_VERIFICATION",
+              title: "Payment Verification Needed",
+              message: `Your GCash payment for order #${simpleOrder.id.substring(0, 8)} needs to be verified by our staff before your order will be processed. Thank you for your patience.`,
+              read: false,
+              link: `/orders/${simpleOrder.id}`,
+            },
+          });
+          
+          // Emit real-time notification via WebSocket
+          const gcashNotification = await db.notification.findFirst({
+            where: {
+              userId: session.user.id,
+              type: "PAYMENT_VERIFICATION",
+              orderId: simpleOrder.id,
+            },
+            orderBy: { createdAt: "desc" },
+          });
+          
+          if (gcashNotification) {
+            emitNotificationToUser(session.user.id, gcashNotification);
           }
         }
       } catch (notificationError) {
