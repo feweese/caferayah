@@ -50,6 +50,10 @@ class SocketClient {
       // Initialize the socket.io server
       await fetch(`${origin}/api/socketio`);
       
+      // Detect if we're on Vercel production
+      const isVercelProduction = origin.includes('vercel.app') || origin.includes('caferayah');
+      console.log(`SocketClient: Running on Vercel production: ${isVercelProduction}`);
+      
       // Create a socket instance with auth data included
       this.socket = io({
         auth: {
@@ -58,15 +62,16 @@ class SocketClient {
         reconnectionAttempts: 10,
         reconnectionDelay: 1000,
         timeout: 20000,
-        // Force WebSocket transport in production
-        transports: ['websocket', 'polling'],
+        // For Vercel, we must use only polling since WebSockets aren't supported
+        transports: isVercelProduction ? ['polling'] : ['websocket', 'polling'],
         // Add more configuration for production
         path: '/api/socketio',
         // Use absolute URL based on current origin
         ...(origin ? { host: origin } : {})
       });
       
-      console.log("SocketClient: Socket instance created with auth userId:", userId);
+      console.log("SocketClient: Socket instance created with auth userId:", userId, 
+                 `using transports: ${isVercelProduction ? 'polling only' : 'websocket, polling'}`);
       
       // Set up event listeners
       this.socket.on('connect', () => {
