@@ -86,6 +86,7 @@ import {
 import { useEffect as ReactUseEffect } from "react";
 import { socketClient } from "@/lib/client-socket";
 import { calculateItemTotal, formatPricePHP, calculateTotal, calculateSubtotal, parseAddons, hasDeliveryFee } from "@/lib/price-utils";
+import { format, formatDistanceToNow } from "date-fns";
 
 interface OrderItem {
   id: string;
@@ -993,16 +994,9 @@ export default function OrderDetailsPage({
                         (statusValue === "COMPLETED" && order.status === "COMPLETED") || 
                         (statusTime && isActive)) && (
                         <div className="text-[10px] text-muted-foreground mt-1 text-center">
-                          {statusTime ? statusTime.toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          }) : ""}
+                          {statusTime ? format(statusTime, "MMM d") : ""}
                           <br />
-                          {statusTime ? statusTime.toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                            hour12: true,
-                          }) : ""}
+                          {statusTime ? format(statusTime, "h:mm a") : ""}
                         </div>
                       )}
                     </div>
@@ -1055,18 +1049,10 @@ export default function OrderDetailsPage({
               <h1 className="text-2xl font-bold">Order #{order.number || order.id.slice(0, 8)}</h1>
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                {new Date(order.createdAt).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+                {format(new Date(order.createdAt), "MMMM d, yyyy")}
                 <span className="inline-flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  {new Date(order.createdAt).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
+                  {format(new Date(order.createdAt), "h:mm a")}
                 </span>
               </p>
               
@@ -1074,15 +1060,7 @@ export default function OrderDetailsPage({
               {completionTime && (
                 <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
                   <CheckCircle2 className="h-4 w-4" />
-                  Completed on {new Date(completionTime).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })} at {new Date(completionTime).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
+                  Completed on {format(new Date(completionTime), "MMMM d, yyyy")} at {format(new Date(completionTime), "h:mm a")}
                 </p>
               )}
               
@@ -1090,15 +1068,7 @@ export default function OrderDetailsPage({
               {cancellationTime && (
                 <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
                   <XCircle className="h-4 w-4" />
-                  Cancelled on {new Date(cancellationTime).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })} at {new Date(cancellationTime).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
+                  Cancelled on {format(new Date(cancellationTime), "MMMM d, yyyy")} at {format(new Date(cancellationTime), "h:mm a")}
                 </p>
               )}
             </div>
