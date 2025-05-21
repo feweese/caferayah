@@ -12,7 +12,25 @@ export default function handler(req, res) {
 
   console.log('Setting up Socket.IO server');
   
-  const io = new Server(res.socket.server);
+  // Determine current origin for CORS
+  const origin = req.headers.origin || '*';
+  console.log(`Socket.IO server initializing with CORS origin: ${origin}`);
+  
+  // Create Socket.IO server with proper configuration
+  const io = new Server(res.socket.server, {
+    path: '/api/socketio',
+    addTrailingSlash: false,
+    cors: {
+      origin: [origin, 'https://caferayah.vercel.app'], // Add your production domain
+      methods: ['GET', 'POST'],
+      credentials: true
+    },
+    transports: ['websocket', 'polling'], // Prioritize WebSocket but fall back to polling
+    connectTimeout: 20000,
+    pingTimeout: 25000,
+    pingInterval: 10000,
+  });
+  
   res.socket.server.io = io;
 
   // Socket authentication
@@ -42,7 +60,7 @@ export default function handler(req, res) {
 
   // Connection handler
   io.on('connection', (socket) => {
-    console.log(`New client connected: ${socket.id}`);
+    console.log(`New client connected: ${socket.id}, transport: ${socket.conn.transport.name}`);
     
     // Handle authentication event
     socket.on('authenticate', (userId) => {

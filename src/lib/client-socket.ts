@@ -43,8 +43,12 @@ class SocketClient {
     console.log("SocketClient: Initializing new socket connection for user", userId);
     
     try {
+      // Get the current origin for dynamic URL construction
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      console.log(`SocketClient: Using origin: ${origin}`);
+      
       // Initialize the socket.io server
-      await fetch('/api/socketio');
+      await fetch(`${origin}/api/socketio`);
       
       // Create a socket instance with auth data included
       this.socket = io({
@@ -53,7 +57,13 @@ class SocketClient {
         },
         reconnectionAttempts: 10,
         reconnectionDelay: 1000,
-        timeout: 20000
+        timeout: 20000,
+        // Force WebSocket transport in production
+        transports: ['websocket', 'polling'],
+        // Add more configuration for production
+        path: '/api/socketio',
+        // Use absolute URL based on current origin
+        ...(origin ? { host: origin } : {})
       });
       
       console.log("SocketClient: Socket instance created with auth userId:", userId);
