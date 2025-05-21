@@ -361,7 +361,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\Paul\\OneDrive\\Documents\\caferayah2\\src\\generated\\prisma",
+      "value": "C:\\Users\\Paul\\OneDrive\\Documents\\caferayah3\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -375,7 +375,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\Paul\\OneDrive\\Documents\\caferayah2\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\Paul\\OneDrive\\Documents\\caferayah3\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -393,7 +393,7 @@ const config = {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgres://postgres:admin@localhost:5432/caferayah"
+        "value": "postgresql://neondb_owner:npg_OgUDESdRW4c1@ep-autumn-darkness-a1f37xuw-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
       }
     }
   },
