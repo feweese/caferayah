@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "env": {
+    "VERCEL_POSTGRES_PRISMA_URL": "${env.DATABASE_URL}",
+    "POSTGRES_URL": "${env.DATABASE_URL}",
+    "POSTGRES_PRISMA_URL": "${env.DATABASE_URL}",
+    "POSTGRES_URL_NON_POOLING": "${env.DATABASE_URL}?pgbouncer=true&connect_timeout=15"
+  }
+} 
