@@ -328,14 +328,12 @@ function ReviewsContent() {
   // If still authenticating, show loading state
   if (status === "loading" || (status === "authenticated" && !session)) {
     return (
-      <AdminLayout>
-        <div className="container flex items-center justify-center py-32">
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <h3 className="text-xl font-medium">Loading...</h3>
-          </div>
+      <div className="flex items-center justify-center py-32">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <h3 className="text-xl font-medium">Loading...</h3>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
@@ -345,220 +343,321 @@ function ReviewsContent() {
   }
 
   return (
-    <AdminLayout>
-      <div className="container px-0">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Reviews</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage and moderate customer reviews
-            </p>
-          </div>
-          <Button 
-            variant="outline" 
-            onClick={() => setRefreshTrigger(prev => prev + 1)}
-            disabled={loading}
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Refresh
-          </Button>
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Reviews</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage and moderate customer reviews
+          </p>
         </div>
-
-        <Tabs 
-          defaultValue="pending" 
-          className="mb-8"
-          value={currentTab}
-          onValueChange={setCurrentTab}
+        <Button 
+          variant="outline" 
+          onClick={() => setRefreshTrigger(prev => prev + 1)}
+          disabled={loading}
         >
-          <TabsList className="mb-4 grid grid-cols-3 h-auto p-1 w-full max-w-md">
-            <TabsTrigger value="pending" className="relative py-2 data-[state=active]:bg-primary/10">
-              Pending
-              {reviews.pending.length > 0 && (
-                <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
-                  {reviews.pending.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="approved" className="relative py-2 data-[state=active]:bg-primary/10">
-              Approved
-              {reviews.approved.length > 0 && (
-                <Badge variant="outline" className="ml-2">
-                  {reviews.approved.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="rejected" className="relative py-2 data-[state=active]:bg-primary/10">
-              Rejected
-              {reviews.rejected.length > 0 && (
-                <Badge variant="outline" className="ml-2">
-                  {reviews.rejected.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* PENDING REVIEWS */}
-          <TabsContent value="pending">
-            <div className="bg-card border rounded-lg overflow-hidden">
-              {loading ? (
-                <div className="p-4">
-                  <ReviewTableSkeleton />
-                </div>
-              ) : reviews.pending.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead>Comment</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          Refresh
+        </Button>
+      </div>
+
+      <Tabs 
+        defaultValue="pending" 
+        className="mb-8"
+        value={currentTab}
+        onValueChange={setCurrentTab}
+      >
+        <TabsList className="mb-4 grid grid-cols-3 h-auto p-1 w-full max-w-md">
+          <TabsTrigger value="pending" className="relative py-2 data-[state=active]:bg-primary/10">
+            Pending
+            {reviews.pending.length > 0 && (
+              <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
+                {reviews.pending.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="approved" className="relative py-2 data-[state=active]:bg-primary/10">
+            Approved
+            {reviews.approved.length > 0 && (
+              <Badge variant="outline" className="ml-2">
+                {reviews.approved.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="relative py-2 data-[state=active]:bg-primary/10">
+            Rejected
+            {reviews.rejected.length > 0 && (
+              <Badge variant="outline" className="ml-2">
+                {reviews.rejected.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* PENDING REVIEWS */}
+        <TabsContent value="pending">
+          <div className="bg-card border rounded-lg overflow-hidden">
+            {loading ? (
+              <div className="p-4">
+                <ReviewTableSkeleton />
+              </div>
+            ) : reviews.pending.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Comment</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reviews.pending.map((review) => (
+                      <TableRow key={review.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={review.user.image || ""} alt={review.user.name} />
+                              <AvatarFallback>
+                                {review.user.name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{review.user.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{review.product.name}</TableCell>
+                        <TableCell>{renderRatingStars(review.rating)}</TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate">{review.comment || "No comment"}</span>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openReviewDetails(review)}
+                              className="h-6 w-6"
+                            >
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            timeZone: 'UTC'
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900"
+                              onClick={() => handleReviewAction(review, "approve")}
+                              disabled={actionLoading}
+                            >
+                              {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ThumbsUp className="h-3 w-3 mr-1" />}
+                              Approve
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900"
+                              onClick={() => openRejectDialog(review)}
+                              disabled={actionLoading}
+                            >
+                              {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ThumbsDown className="h-3 w-3 mr-1" />}
+                              Reject
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reviews.pending.map((review) => (
-                        <TableRow key={review.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={review.user.image || ""} alt={review.user.name} />
-                                <AvatarFallback>
-                                  {review.user.name.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{review.user.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{review.product.name}</TableCell>
-                          <TableCell>{renderRatingStars(review.rating)}</TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate">{review.comment || "No comment"}</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => openReviewDetails(review)}
-                                className="h-6 w-6"
-                              >
-                                <Info className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(review.createdAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              timeZone: 'UTC'
-                            })}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900"
-                                onClick={() => handleReviewAction(review, "approve")}
-                                disabled={actionLoading}
-                              >
-                                {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ThumbsUp className="h-3 w-3 mr-1" />}
-                                Approve
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900"
-                                onClick={() => openRejectDialog(review)}
-                                disabled={actionLoading}
-                              >
-                                {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ThumbsDown className="h-3 w-3 mr-1" />}
-                                Reject
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="py-16 text-center">
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="p-4 rounded-full bg-muted">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
-                        <path d="M17.5 21H9a7 7 0 1 1 0-14h12" />
-                        <path d="M14 7h5v5" />
-                        <path d="M14 12V7" />
-                      </svg>
-                    </div>
-                    <p className="text-lg font-medium">No pending reviews to moderate</p>
-                    <p className="text-muted-foreground">All reviews have been handled</p>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="py-16 text-center">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="p-4 rounded-full bg-muted">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
+                      <path d="M17.5 21H9a7 7 0 1 1 0-14h12" />
+                      <path d="M14 7h5v5" />
+                      <path d="M14 12V7" />
+                    </svg>
                   </div>
+                  <p className="text-lg font-medium">No pending reviews to moderate</p>
+                  <p className="text-muted-foreground">All reviews have been handled</p>
                 </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          {/* APPROVED REVIEWS */}
-          <TabsContent value="approved">
-            <div className="bg-card border rounded-lg overflow-hidden">
-              {loading ? (
-                <div className="p-4">
-                  <ReviewTableSkeleton />
-                </div>
-              ) : reviews.approved.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead>Comment</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        {/* APPROVED REVIEWS */}
+        <TabsContent value="approved">
+          <div className="bg-card border rounded-lg overflow-hidden">
+            {loading ? (
+              <div className="p-4">
+                <ReviewTableSkeleton />
+              </div>
+            ) : reviews.approved.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Comment</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reviews.approved.map((review) => (
+                      <TableRow key={review.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={review.user.image || ""} alt={review.user.name} />
+                              <AvatarFallback>
+                                {review.user.name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{review.user.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{review.product.name}</TableCell>
+                        <TableCell>{renderRatingStars(review.rating)}</TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate">{review.comment || "No comment"}</span>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openReviewDetails(review)}
+                              className="h-6 w-6"
+                            >
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            timeZone: 'UTC'
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-red-50 text-red-800 hover:bg-red-100"
+                            onClick={() => openDeleteDialog(review)}
+                            disabled={actionLoading}
+                          >
+                            {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Trash2 className="h-3 w-3 mr-1" />}
+                            Remove
+                          </Button>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reviews.approved.map((review) => (
-                        <TableRow key={review.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={review.user.image || ""} alt={review.user.name} />
-                                <AvatarFallback>
-                                  {review.user.name.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{review.user.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{review.product.name}</TableCell>
-                          <TableCell>{renderRatingStars(review.rating)}</TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate">{review.comment || "No comment"}</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => openReviewDetails(review)}
-                                className="h-6 w-6"
-                              >
-                                <Info className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(review.createdAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              timeZone: 'UTC'
-                            })}
-                          </TableCell>
-                          <TableCell className="text-right">
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="py-16 text-center">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="p-4 rounded-full bg-muted">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-medium">No approved reviews found</p>
+                  <p className="text-muted-foreground">There are no approved reviews yet</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        {/* REJECTED REVIEWS */}
+        <TabsContent value="rejected">
+          <div className="bg-card border rounded-lg overflow-hidden">
+            {loading ? (
+              <div className="p-4">
+                <ReviewTableSkeleton />
+              </div>
+            ) : reviews.rejected.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Comment</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reviews.rejected.map((review) => (
+                      <TableRow key={review.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={review.user.image || ""} alt={review.user.name} />
+                              <AvatarFallback>
+                                {review.user.name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{review.user.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{review.product.name}</TableCell>
+                        <TableCell>{renderRatingStars(review.rating)}</TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate">{review.comment || "No comment"}</span>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openReviewDetails(review)}
+                              className="h-6 w-6"
+                            >
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            timeZone: 'UTC'
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="bg-green-50 text-green-800 hover:bg-green-100"
+                              onClick={() => handleReviewAction(review, "approve")}
+                              disabled={actionLoading}
+                            >
+                              {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ThumbsUp className="h-3 w-3 mr-1" />}
+                              Approve
+                            </Button>
                             <Button 
                               variant="outline" 
                               size="sm" 
@@ -567,136 +666,33 @@ function ReviewsContent() {
                               disabled={actionLoading}
                             >
                               {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Trash2 className="h-3 w-3 mr-1" />}
-                              Remove
+                              Delete
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="py-16 text-center">
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="p-4 rounded-full bg-muted">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                        <polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                    </div>
-                    <p className="text-lg font-medium">No approved reviews found</p>
-                    <p className="text-muted-foreground">There are no approved reviews yet</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          {/* REJECTED REVIEWS */}
-          <TabsContent value="rejected">
-            <div className="bg-card border rounded-lg overflow-hidden">
-              {loading ? (
-                <div className="p-4">
-                  <ReviewTableSkeleton />
-                </div>
-              ) : reviews.rejected.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead>Comment</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reviews.rejected.map((review) => (
-                        <TableRow key={review.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={review.user.image || ""} alt={review.user.name} />
-                                <AvatarFallback>
-                                  {review.user.name.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{review.user.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{review.product.name}</TableCell>
-                          <TableCell>{renderRatingStars(review.rating)}</TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate">{review.comment || "No comment"}</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => openReviewDetails(review)}
-                                className="h-6 w-6"
-                              >
-                                <Info className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(review.createdAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              timeZone: 'UTC'
-                            })}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="bg-green-50 text-green-800 hover:bg-green-100"
-                                onClick={() => handleReviewAction(review, "approve")}
-                                disabled={actionLoading}
-                              >
-                                {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ThumbsUp className="h-3 w-3 mr-1" />}
-                                Approve
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="bg-red-50 text-red-800 hover:bg-red-100"
-                                onClick={() => openDeleteDialog(review)}
-                                disabled={actionLoading}
-                              >
-                                {actionLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Trash2 className="h-3 w-3 mr-1" />}
-                                Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="py-16 text-center">
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="p-4 rounded-full bg-muted">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <line x1="9" y1="9" x2="15" y2="15" />
-                        <line x1="15" y1="9" x2="9" y2="15" />
-                      </svg>
-                    </div>
-                    <p className="text-lg font-medium">No rejected reviews found</p>
-                    <p className="text-muted-foreground">There are no rejected reviews yet</p>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="py-16 text-center">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="p-4 rounded-full bg-muted">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                    </svg>
                   </div>
+                  <p className="text-lg font-medium">No rejected reviews found</p>
+                  <p className="text-muted-foreground">There are no rejected reviews yet</p>
                 </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
       
       {/* Review Details Dialog */}
       <Dialog open={reviewDetailOpen} onOpenChange={(isOpen) => {
@@ -879,7 +875,7 @@ function ReviewsContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+    </div>
   );
 }
 
@@ -933,27 +929,29 @@ function ReviewTableSkeleton() {
 export default function AdminReviewsPage() {
   return (
     <AdminLayout>
-      <Suspense fallback={
-        <div className="container py-6">
-          <div className="flex flex-col space-y-4">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold">Loading Reviews...</h1>
+      <div className="container px-0">
+        <Suspense fallback={
+          <div className="w-full py-6">
+            <div className="flex flex-col space-y-4">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold">Loading Reviews...</h1>
+              </div>
+              <Tabs defaultValue="pending" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="pending">Pending</TabsTrigger>
+                  <TabsTrigger value="approved">Approved</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                </TabsList>
+                <TabsContent value="pending" className="mt-4">
+                  <ReviewTableSkeleton />
+                </TabsContent>
+              </Tabs>
             </div>
-            <Tabs defaultValue="pending" className="w-full">
-              <TabsList>
-                <TabsTrigger value="pending">Pending</TabsTrigger>
-                <TabsTrigger value="approved">Approved</TabsTrigger>
-                <TabsTrigger value="rejected">Rejected</TabsTrigger>
-              </TabsList>
-              <TabsContent value="pending" className="mt-4">
-                <ReviewTableSkeleton />
-              </TabsContent>
-            </Tabs>
           </div>
-        </div>
-      }>
-        <ReviewsContent />
-      </Suspense>
+        }>
+          <ReviewsContent />
+        </Suspense>
+      </div>
     </AdminLayout>
   );
 } 
