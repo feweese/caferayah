@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -186,7 +186,8 @@ const PercentageChange = ({ value }: { value: number }) => {
   }
 };
 
-export default function AnalyticsPage() {
+// Component that uses useSearchParams
+function AnalyticsContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -639,335 +640,270 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="container px-0">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Sales Analytics</h1>
-            <p className="text-muted-foreground mt-1">
-              Track sales performance and revenue metrics
-            </p>
-          </div>
-          <div className="mt-4 sm:mt-0">
-            <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <TabsList>
-                <TabsTrigger value="day">Today</TabsTrigger>
-                <TabsTrigger value="week">Last 7 Days</TabsTrigger>
-                <TabsTrigger value="month">Last 30 Days</TabsTrigger>
-                <TabsTrigger value="year">Last 365 Days</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+    <div className="container px-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Sales Analytics</h1>
+          <p className="text-muted-foreground mt-1">
+            Track sales performance and revenue metrics
+          </p>
         </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Revenue
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-10 w-1/2" />
-              ) : (
-                <>
-                  <div className="text-3xl font-bold">
-                    {analyticsData?.currentPeriod ? formatCurrency(analyticsData.currentPeriod.totalRevenue) : "₱0.00"}
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-muted-foreground">
-                      From {analyticsData?.currentPeriod?.completedOrders || 0} completed orders
-                    </p>
-                    {analyticsData?.comparison && (
-                      <PercentageChange value={analyticsData.comparison.revenueChange} />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    vs previous {selectedPeriod === 'day' ? 'day' : 
-                                selectedPeriod === 'week' ? '7 days' : 
-                                selectedPeriod === 'month' ? '30 days' : '365 days'}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Orders
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-10 w-1/2" />
-              ) : (
-                <>
-                  <div className="text-3xl font-bold">
-                    {analyticsData?.currentPeriod ? analyticsData.currentPeriod.totalOrders : 0}
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-muted-foreground">
-                      All non-cancelled orders
-                    </p>
-                    {analyticsData?.comparison && (
-                      <PercentageChange value={analyticsData.comparison.ordersChange} />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    vs previous {selectedPeriod === 'day' ? 'day' : 
-                                selectedPeriod === 'week' ? '7 days' : 
-                                selectedPeriod === 'month' ? '30 days' : '365 days'}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Completed Orders
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-10 w-1/2" />
-              ) : (
-                <>
-                  <div className="text-3xl font-bold">
-                    {analyticsData?.currentPeriod ? analyticsData.currentPeriod.completedOrders : 0}
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-muted-foreground">
-                      Successfully fulfilled
-                    </p>
-                    {analyticsData?.comparison && (
-                      <PercentageChange value={analyticsData.comparison.completedOrdersChange} />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    vs previous {selectedPeriod === 'day' ? 'day' : 
-                                selectedPeriod === 'week' ? '7 days' : 
-                                selectedPeriod === 'month' ? '30 days' : '365 days'}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Average Order Value
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-10 w-1/2" />
-              ) : (
-                <>
-                  <div className="text-3xl font-bold">
-                    {analyticsData?.currentPeriod
-                      ? formatCurrency(analyticsData.currentPeriod.averageOrderValue)
-                      : "₱0.00"}
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-muted-foreground">
-                      Revenue per order
-                    </p>
-                    {analyticsData?.comparison && (
-                      <PercentageChange value={analyticsData.comparison.averageOrderValueChange} />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    vs previous {selectedPeriod === 'day' ? 'day' : 
-                                selectedPeriod === 'week' ? '7 days' : 
-                                selectedPeriod === 'month' ? '30 days' : '365 days'}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+        <div className="mt-4 sm:mt-0">
+          <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <TabsList>
+              <TabsTrigger value="day">Today</TabsTrigger>
+              <TabsTrigger value="week">Last 7 Days</TabsTrigger>
+              <TabsTrigger value="month">Last 30 Days</TabsTrigger>
+              <TabsTrigger value="year">Last 365 Days</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
+      </div>
 
-        {/* Add a comparison overview card */}
-        {!isLoading && analyticsData?.comparison && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Period-over-Period Comparison</CardTitle>
-              <CardDescription>
-                Performance comparison vs previous {selectedPeriod === 'day' ? 'day' : 
-                                                    selectedPeriod === 'week' ? '7 days' : 
-                                                    selectedPeriod === 'month' ? '30 days' : '365 days'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Revenue Change</p>
-                  <div className="flex items-center">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-10 w-1/2" />
+            ) : (
+              <>
+                <div className="text-3xl font-bold">
+                  {analyticsData?.currentPeriod ? formatCurrency(analyticsData.currentPeriod.totalRevenue) : "₱0.00"}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-muted-foreground">
+                    From {analyticsData?.currentPeriod?.completedOrders || 0} completed orders
+                  </p>
+                  {analyticsData?.comparison && (
                     <PercentageChange value={analyticsData.comparison.revenueChange} />
-                    <span className="ml-2">
-                      {formatCurrency(analyticsData.currentPeriod.totalRevenue - analyticsData.previousPeriod.totalRevenue)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {formatCurrency(analyticsData.currentPeriod.totalRevenue)} vs {formatCurrency(analyticsData.previousPeriod.totalRevenue)}
-                  </p>
+                  )}
                 </div>
-                
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Orders Change</p>
-                  <div className="flex items-center">
-                    <PercentageChange value={analyticsData.comparison.ordersChange} />
-                    <span className="ml-2">
-                      {analyticsData.currentPeriod.totalOrders - analyticsData.previousPeriod.totalOrders} orders
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {analyticsData.currentPeriod.totalOrders} vs {analyticsData.previousPeriod.totalOrders}
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Completed Orders Change</p>
-                  <div className="flex items-center">
-                    <PercentageChange value={analyticsData.comparison.completedOrdersChange} />
-                    <span className="ml-2">
-                      {analyticsData.currentPeriod.completedOrders - analyticsData.previousPeriod.completedOrders} orders
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {analyticsData.currentPeriod.completedOrders} vs {analyticsData.previousPeriod.completedOrders}
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Avg Order Value Change</p>
-                  <div className="flex items-center">
-                    <PercentageChange value={analyticsData.comparison.averageOrderValueChange} />
-                    <span className="ml-2">
-                      {formatCurrency(analyticsData.currentPeriod.averageOrderValue - analyticsData.previousPeriod.averageOrderValue)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {formatCurrency(analyticsData.currentPeriod.averageOrderValue)} vs {formatCurrency(analyticsData.previousPeriod.averageOrderValue)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  vs previous {selectedPeriod === 'day' ? 'day' : 
+                              selectedPeriod === 'week' ? '7 days' : 
+                              selectedPeriod === 'month' ? '30 days' : '365 days'}
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          {/* Revenue Trend Chart */}
-          <Card className="col-span-1 md:col-span-2">
-            <CardHeader>
-              <CardTitle>Revenue Trend</CardTitle>
-              <CardDescription>
-                Revenue trend over {selectedPeriod === 'day' ? 'today (hourly)' : 
-                                   selectedPeriod === 'week' ? 'the last 7 days' : 
-                                   selectedPeriod === 'month' ? 'the last 30 days' : 
-                                   'the last 365 days'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-96">
-              {isLoading ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Orders
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-10 w-1/2" />
+            ) : (
+              <>
+                <div className="text-3xl font-bold">
+                  {analyticsData?.currentPeriod ? analyticsData.currentPeriod.totalOrders : 0}
                 </div>
-              ) : analyticsData && analyticsData.revenueTrend.length > 0 ? (
-                <div className="flex flex-col h-full">
-                  <ResponsiveContainer width="100%" height="85%">
-                    <AreaChart
-                      data={formatRevenueTrendData()}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 20,
-                        bottom: 10,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="date" 
-                        tick={(props) => {
-                          const { x, y, payload, index } = props;
-                          const dataPoint = formatRevenueTrendData()[index];
-                          const originalDate = dataPoint?.originalDate;
-                          
-                          // Special handling for day view with time data
-                          if (selectedPeriod === 'day' && dataPoint?.isTimeData) {
-                            const showTick = index % 3 === 0 || index === 0 || 
-                                            index === formatRevenueTrendData().length - 1;
-                            
-                            if (!showTick) return null;
-                            
-                            return (
-                              <g transform={`translate(${x},${y})`}>
-                                <text 
-                                  x={0} 
-                                  y={0} 
-                                  dy={16} 
-                                  textAnchor="middle" 
-                                  fill={CHART_TEXT_STYLE.fill}
-                                  fontWeight={CHART_TEXT_STYLE.fontWeight}
-                                  fontSize={CHART_TEXT_STYLE.fontSize}
-                                >
-                                  {payload.value}
-                                </text>
-                              </g>
-                            );
-                          }
-                          
-                          if (!originalDate) return null;
-                          
-                          // Rest of the existing tick rendering logic
-                          const textFill = CHART_TEXT_STYLE.fill;
-                          let fontWeight = CHART_TEXT_STYLE.fontWeight;
-                          let fontSize = CHART_TEXT_STYLE.fontSize;
-                          let rotateAngle = 0;
-                          let showTick = true;
-                          
-                          // Special handling for different periods
-                          if (selectedPeriod === 'month') {
-                            // For month view, apply systematic filtering
-                            const dateObj = new Date(originalDate + "T00:00:00Z");
-                            const day = dateObj.getDate();
-                            
-                            // Key dates to show
-                            const isFirstOrLastDay = 
-                              index === 0 || 
-                              index === formatRevenueTrendData().length - 1;
-                            const isMonthTransition = day === 1;
-                            const isKeyDate = day === 5 || day === 10 || 
-                                            day === 15 || day === 20 || 
-                                            day === 25 || day === 30;
-                            const isEveryFifthDay = day % 5 === 0;
-                            
-                            showTick = isFirstOrLastDay || isMonthTransition || 
-                                      isKeyDate || isEveryFifthDay;
-                                      
-                            // Special styling for month transitions
-                            if (isMonthTransition) {
-                              fontWeight = "bold";
-                              fontSize = 13;
-                            }
-                            
-                            rotateAngle = -30;
-                            
-                          } else if (selectedPeriod === 'week') {
-                            // For week view, ensure all days are visible with proper contrast
-                            rotateAngle = -20;
-                            
-                          } else if (selectedPeriod === 'year') {
-                            // For year view, no need for much filtering
-                            rotateAngle = 0;
-                          }
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-muted-foreground">
+                    All non-cancelled orders
+                  </p>
+                  {analyticsData?.comparison && (
+                    <PercentageChange value={analyticsData.comparison.ordersChange} />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  vs previous {selectedPeriod === 'day' ? 'day' : 
+                              selectedPeriod === 'week' ? '7 days' : 
+                              selectedPeriod === 'month' ? '30 days' : '365 days'}
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Completed Orders
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-10 w-1/2" />
+            ) : (
+              <>
+                <div className="text-3xl font-bold">
+                  {analyticsData?.currentPeriod ? analyticsData.currentPeriod.completedOrders : 0}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-muted-foreground">
+                    Successfully fulfilled
+                  </p>
+                  {analyticsData?.comparison && (
+                    <PercentageChange value={analyticsData.comparison.completedOrdersChange} />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  vs previous {selectedPeriod === 'day' ? 'day' : 
+                              selectedPeriod === 'week' ? '7 days' : 
+                              selectedPeriod === 'month' ? '30 days' : '365 days'}
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Average Order Value
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-10 w-1/2" />
+            ) : (
+              <>
+                <div className="text-3xl font-bold">
+                  {analyticsData?.currentPeriod
+                    ? formatCurrency(analyticsData.currentPeriod.averageOrderValue)
+                    : "₱0.00"}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-muted-foreground">
+                    Revenue per order
+                  </p>
+                  {analyticsData?.comparison && (
+                    <PercentageChange value={analyticsData.comparison.averageOrderValueChange} />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  vs previous {selectedPeriod === 'day' ? 'day' : 
+                              selectedPeriod === 'week' ? '7 days' : 
+                              selectedPeriod === 'month' ? '30 days' : '365 days'}
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Add a comparison overview card */}
+      {!isLoading && analyticsData?.comparison && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Period-over-Period Comparison</CardTitle>
+            <CardDescription>
+              Performance comparison vs previous {selectedPeriod === 'day' ? 'day' : 
+                                                  selectedPeriod === 'week' ? '7 days' : 
+                                                  selectedPeriod === 'month' ? '30 days' : '365 days'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Revenue Change</p>
+                <div className="flex items-center">
+                  <PercentageChange value={analyticsData.comparison.revenueChange} />
+                  <span className="ml-2">
+                    {formatCurrency(analyticsData.currentPeriod.totalRevenue - analyticsData.previousPeriod.totalRevenue)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formatCurrency(analyticsData.currentPeriod.totalRevenue)} vs {formatCurrency(analyticsData.previousPeriod.totalRevenue)}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Orders Change</p>
+                <div className="flex items-center">
+                  <PercentageChange value={analyticsData.comparison.ordersChange} />
+                  <span className="ml-2">
+                    {analyticsData.currentPeriod.totalOrders - analyticsData.previousPeriod.totalOrders} orders
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {analyticsData.currentPeriod.totalOrders} vs {analyticsData.previousPeriod.totalOrders}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Completed Orders Change</p>
+                <div className="flex items-center">
+                  <PercentageChange value={analyticsData.comparison.completedOrdersChange} />
+                  <span className="ml-2">
+                    {analyticsData.currentPeriod.completedOrders - analyticsData.previousPeriod.completedOrders} orders
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {analyticsData.currentPeriod.completedOrders} vs {analyticsData.previousPeriod.completedOrders}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Avg Order Value Change</p>
+                <div className="flex items-center">
+                  <PercentageChange value={analyticsData.comparison.averageOrderValueChange} />
+                  <span className="ml-2">
+                    {formatCurrency(analyticsData.currentPeriod.averageOrderValue - analyticsData.previousPeriod.averageOrderValue)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formatCurrency(analyticsData.currentPeriod.averageOrderValue)} vs {formatCurrency(analyticsData.previousPeriod.averageOrderValue)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        {/* Revenue Trend Chart */}
+        <Card className="col-span-1 md:col-span-2">
+          <CardHeader>
+            <CardTitle>Revenue Trend</CardTitle>
+            <CardDescription>
+              Revenue trend over {selectedPeriod === 'day' ? 'today (hourly)' : 
+                                 selectedPeriod === 'week' ? 'the last 7 days' : 
+                                 selectedPeriod === 'month' ? 'the last 30 days' : 
+                                 'the last 365 days'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-96">
+            {isLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : analyticsData && analyticsData.revenueTrend.length > 0 ? (
+              <div className="flex flex-col h-full">
+                <ResponsiveContainer width="100%" height="85%">
+                  <AreaChart
+                    data={formatRevenueTrendData()}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 10,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={(props) => {
+                        const { x, y, payload, index } = props;
+                        const dataPoint = formatRevenueTrendData()[index];
+                        const originalDate = dataPoint?.originalDate;
+                        
+                        // Special handling for day view with time data
+                        if (selectedPeriod === 'day' && dataPoint?.isTimeData) {
+                          const showTick = index % 3 === 0 || index === 0 || 
+                                          index === formatRevenueTrendData().length - 1;
                           
                           if (!showTick) return null;
                           
@@ -978,377 +914,477 @@ export default function AnalyticsPage() {
                                 y={0} 
                                 dy={16} 
                                 textAnchor="middle" 
-                                fill={textFill}
-                                fontWeight={fontWeight}
-                                fontSize={fontSize}
-                                transform={`rotate(${rotateAngle})`}
+                                fill={CHART_TEXT_STYLE.fill}
+                                fontWeight={CHART_TEXT_STYLE.fontWeight}
+                                fontSize={CHART_TEXT_STYLE.fontSize}
                               >
                                 {payload.value}
                               </text>
                             </g>
                           );
-                        }}
-                        interval={0}
-                        padding={{ left: 10, right: 10 }}
-                        height={selectedPeriod === 'month' ? 60 : 
-                                 selectedPeriod === 'week' ? 50 : 40}
-                      />
-                      <YAxis 
-                        tickFormatter={(value) => `₱${value}`}
-                        tick={{ ...CHART_TEXT_STYLE }}
-                      />
-                      <Tooltip 
-                        labelFormatter={(label, payload) => {
-                          // Find the original data point to get the consistent tooltip date
-                          if (payload && payload.length > 0) {
-                            const dataPoint = payload[0].payload;
-                            if (dataPoint && dataPoint.tooltipDate) {
-                              // Check if this is time data (from day view)
-                              if (dataPoint.isTimeData) {
-                                return `Time: ${dataPoint.tooltipDate}`;
-                              }
-                              return `Date: ${dataPoint.tooltipDate}`;
-                            }
+                        }
+                        
+                        if (!originalDate) return null;
+                        
+                        // Rest of the existing tick rendering logic
+                        const textFill = CHART_TEXT_STYLE.fill;
+                        let fontWeight = CHART_TEXT_STYLE.fontWeight;
+                        let fontSize = CHART_TEXT_STYLE.fontSize;
+                        let rotateAngle = 0;
+                        let showTick = true;
+                        
+                        // Special handling for different periods
+                        if (selectedPeriod === 'month') {
+                          // For month view, apply systematic filtering
+                          const dateObj = new Date(originalDate + "T00:00:00Z");
+                          const day = dateObj.getDate();
+                          
+                          // Key dates to show
+                          const isFirstOrLastDay = 
+                            index === 0 || 
+                            index === formatRevenueTrendData().length - 1;
+                          const isMonthTransition = day === 1;
+                          const isKeyDate = day === 5 || day === 10 || 
+                                          day === 15 || day === 20 || 
+                                          day === 25 || day === 30;
+                          const isEveryFifthDay = day % 5 === 0;
+                          
+                          showTick = isFirstOrLastDay || isMonthTransition || 
+                                    isKeyDate || isEveryFifthDay;
+                                    
+                          // Special styling for month transitions
+                          if (isMonthTransition) {
+                            fontWeight = "bold";
+                            fontSize = 13;
                           }
-                          return `Date: ${label}`;
-                        }}
-                        content={<CustomTooltip />}
-                      />
-                      <Legend />
-                      <Area
-                        type="monotone"
-                        dataKey="revenue"
-                        stroke="#8884d8"
-                        fill="#8884d8"
-                        fillOpacity={0.2}
-                        name="Revenue"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 space-y-1">
-                    {analyticsData?.comparison && (
-                      <div className="flex items-center text-sm font-medium">
-                        {analyticsData.comparison.revenueChange >= 0 ? (
-                          <ArrowUpIcon className="h-4 w-4 mr-1 text-green-500" />
-                        ) : (
-                          <ArrowDownIcon className="h-4 w-4 mr-1 text-red-500" />
-                        )}
-                        <span className={analyticsData.comparison.revenueChange >= 0 ? "text-green-500" : "text-red-500"}>
-                          Trending {analyticsData.comparison.revenueChange >= 0 ? "up" : "down"} by {Math.abs(analyticsData.comparison.revenueChange).toFixed(1)}% over {
-                            selectedPeriod === 'day' ? 'today' : 
-                            selectedPeriod === 'week' ? 'the last 7 days' : 
-                            selectedPeriod === 'month' ? 'the last 30 days' : 
-                            'the last 365 days'
-                          }
-                        </span>
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground">
-                      {getPeriodDateRange(selectedPeriod)}
-                    </div>
-                    {/* Add note for partial month data */}
-                    {selectedPeriod === 'year' && (
-                      <div className="text-xs text-muted-foreground mt-2">
-                        † Indicates current month (partial data)
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No data available for this period
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Peak Hours Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Peak Hours</CardTitle>
-              <CardDescription>
-                Orders by hour of day {selectedPeriod === 'day' ? 'today' : 
-                                      selectedPeriod === 'week' ? 'over the last 7 days' : 
-                                      selectedPeriod === 'month' ? 'over the last 30 days' : 
-                                      'over the last 365 days'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoading ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : analyticsData && analyticsData.peakHours.some(item => item.orders > 0) ? (
-                <div className="flex flex-col h-full">
-                  <ResponsiveContainer width="100%" height="85%">
-                    <BarChart
-                      data={analyticsData.peakHours}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 20,
-                        bottom: 40,
+                          
+                          rotateAngle = -30;
+                          
+                        } else if (selectedPeriod === 'week') {
+                          // For week view, ensure all days are visible with proper contrast
+                          rotateAngle = -20;
+                          
+                        } else if (selectedPeriod === 'year') {
+                          // For year view, no need for much filtering
+                          rotateAngle = 0;
+                        }
+                        
+                        if (!showTick) return null;
+                        
+                        return (
+                          <g transform={`translate(${x},${y})`}>
+                            <text 
+                              x={0} 
+                              y={0} 
+                              dy={16} 
+                              textAnchor="middle" 
+                              fill={textFill}
+                              fontWeight={fontWeight}
+                              fontSize={fontSize}
+                              transform={`rotate(${rotateAngle})`}
+                            >
+                              {payload.value}
+                            </text>
+                          </g>
+                        );
                       }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="hour" 
-                        angle={-45} 
-                        textAnchor="end"
-                        height={60}
-                        tick={{ ...CHART_TEXT_STYLE }}
-                        interval={selectedPeriod === "week" ? 0 : "auto"}
-                      />
-                      <YAxis 
-                        allowDecimals={false}
-                        tick={{ ...CHART_TEXT_STYLE }}
-                      />
-                      <Tooltip 
-                        labelFormatter={(label) => `Time: ${label}`}
-                        content={<CustomTooltip />}
-                      />
-                      <Legend />
-                      <Bar
-                        dataKey="orders"
-                        name="Orders"
-                        fill="#0088FE"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 text-xs text-muted-foreground">
+                      interval={0}
+                      padding={{ left: 10, right: 10 }}
+                      height={selectedPeriod === 'month' ? 60 : 
+                               selectedPeriod === 'week' ? 50 : 40}
+                    />
+                    <YAxis 
+                      tickFormatter={(value) => `₱${value}`}
+                      tick={{ ...CHART_TEXT_STYLE }}
+                    />
+                    <Tooltip 
+                      labelFormatter={(label, payload) => {
+                        // Find the original data point to get the consistent tooltip date
+                        if (payload && payload.length > 0) {
+                          const dataPoint = payload[0].payload;
+                          if (dataPoint && dataPoint.tooltipDate) {
+                            // Check if this is time data (from day view)
+                            if (dataPoint.isTimeData) {
+                              return `Time: ${dataPoint.tooltipDate}`;
+                            }
+                            return `Date: ${dataPoint.tooltipDate}`;
+                          }
+                        }
+                        return `Date: ${label}`;
+                      }}
+                      content={<CustomTooltip />}
+                    />
+                    <Legend />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#8884d8"
+                      fill="#8884d8"
+                      fillOpacity={0.2}
+                      name="Revenue"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+                <div className="mt-2 space-y-1">
+                  {analyticsData?.comparison && (
+                    <div className="flex items-center text-sm font-medium">
+                      {analyticsData.comparison.revenueChange >= 0 ? (
+                        <ArrowUpIcon className="h-4 w-4 mr-1 text-green-500" />
+                      ) : (
+                        <ArrowDownIcon className="h-4 w-4 mr-1 text-red-500" />
+                      )}
+                      <span className={analyticsData.comparison.revenueChange >= 0 ? "text-green-500" : "text-red-500"}>
+                        Trending {analyticsData.comparison.revenueChange >= 0 ? "up" : "down"} by {Math.abs(analyticsData.comparison.revenueChange).toFixed(1)}% over {
+                          selectedPeriod === 'day' ? 'today' : 
+                          selectedPeriod === 'week' ? 'the last 7 days' : 
+                          selectedPeriod === 'month' ? 'the last 30 days' : 
+                          'the last 365 days'
+                        }
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground">
                     {getPeriodDateRange(selectedPeriod)}
-                    {/* Add note for partial month data */}
-                    {selectedPeriod === 'year' && (
-                      <div className="mt-1">
-                        † Includes current month (partial data)
-                      </div>
-                    )}
                   </div>
+                  {/* Add note for partial month data */}
+                  {selectedPeriod === 'year' && (
+                    <div className="text-xs text-muted-foreground mt-2">
+                      † Indicates current month (partial data)
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No data available for this period
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                No data available for this period
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Revenue by Category Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue by Category</CardTitle>
-              <CardDescription>
-                Sales distribution by product category {selectedPeriod === 'day' ? 'today' : 
-                                                      selectedPeriod === 'week' ? 'over the last 7 days' : 
-                                                      selectedPeriod === 'month' ? 'over the last 30 days' : 
-                                                      'over the last 365 days'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoading ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+        {/* Peak Hours Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Peak Hours</CardTitle>
+            <CardDescription>
+              Orders by hour of day {selectedPeriod === 'day' ? 'today' : 
+                                    selectedPeriod === 'week' ? 'over the last 7 days' : 
+                                    selectedPeriod === 'month' ? 'over the last 30 days' : 
+                                    'over the last 365 days'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-80">
+            {isLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : analyticsData && analyticsData.peakHours.some(item => item.orders > 0) ? (
+              <div className="flex flex-col h-full">
+                <ResponsiveContainer width="100%" height="85%">
+                  <BarChart
+                    data={analyticsData.peakHours}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 40,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="hour" 
+                      angle={-45} 
+                      textAnchor="end"
+                      height={60}
+                      tick={{ ...CHART_TEXT_STYLE }}
+                      interval={selectedPeriod === "week" ? 0 : "auto"}
+                    />
+                    <YAxis 
+                      allowDecimals={false}
+                      tick={{ ...CHART_TEXT_STYLE }}
+                    />
+                    <Tooltip 
+                      labelFormatter={(label) => `Time: ${label}`}
+                      content={<CustomTooltip />}
+                    />
+                    <Legend />
+                    <Bar
+                      dataKey="orders"
+                      name="Orders"
+                      fill="#0088FE"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {getPeriodDateRange(selectedPeriod)}
+                  {/* Add note for partial month data */}
+                  {selectedPeriod === 'year' && (
+                    <div className="mt-1">
+                      † Includes current month (partial data)
+                    </div>
+                  )}
                 </div>
-              ) : analyticsData && analyticsData.revenueByCategory.length > 0 ? (
-                <div className="flex flex-col h-full">
-                  <ResponsiveContainer width="100%" height="85%">
-                    <PieChart>
-                      <Pie
-                        data={formatCategoryData().map((item, index) => ({
-                          name: item.category,
-                          value: item.revenue,
-                          colorIndex: index,
-                          _tooltipTitle: "Category",
-                          fill: COLORS[index % COLORS.length],
-                        }))}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={true}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        dataKey="value"
-                        nameKey="name"
-                      >
-                        {formatCategoryData().map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={COLORS[index % COLORS.length]} 
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        formatter={(value, name, props) => {
-                          // This helps ensure the color is passed correctly
-                          return [value, name, { color: props.fill }];
-                        }}
-                      />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {getPeriodDateRange(selectedPeriod)}
-                    {/* Add note for partial month data */}
-                    {selectedPeriod === 'year' && (
-                      <div className="mt-1">
-                        † Includes current month (partial data)
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No data available for this period
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                No data available for this period
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Revenue by Payment Method Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue by Payment Method</CardTitle>
-              <CardDescription>
-                Sales distribution by payment method {selectedPeriod === 'day' ? 'today' : 
+        {/* Revenue by Category Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue by Category</CardTitle>
+            <CardDescription>
+              Sales distribution by product category {selectedPeriod === 'day' ? 'today' : 
                                                     selectedPeriod === 'week' ? 'over the last 7 days' : 
                                                     selectedPeriod === 'month' ? 'over the last 30 days' : 
                                                     'over the last 365 days'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoading ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : analyticsData && analyticsData.revenueByPaymentMethod.length > 0 ? (
-                <div className="flex flex-col h-full">
-                  <ResponsiveContainer width="100%" height="85%">
-                    <PieChart>
-                      <Pie
-                        data={formatPaymentMethodData().map((item, index) => ({
-                          name: item.method,
-                          value: item.revenue,
-                          colorIndex: index,
-                          _tooltipTitle: "Payment Method",
-                          fill: COLORS[index % COLORS.length],
-                        }))}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={true}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        dataKey="value"
-                        nameKey="name"
-                      >
-                        {formatPaymentMethodData().map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={COLORS[index % COLORS.length]} 
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        formatter={(value, name, props) => {
-                          // This helps ensure the color is passed correctly
-                          return [value, name, { color: props.fill }];
-                        }}
-                      />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {getPeriodDateRange(selectedPeriod)}
-                    {/* Add note for partial month data */}
-                    {selectedPeriod === 'year' && (
-                      <div className="mt-1">
-                        † Includes current month (partial data)
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No data available for this period
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Top Products Chart */}
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle>Top Products</CardTitle>
-              <CardDescription>
-                Best selling products by revenue {selectedPeriod === 'day' ? 'today' : 
-                                                selectedPeriod === 'week' ? 'over the last 7 days' : 
-                                                selectedPeriod === 'month' ? 'over the last 30 days' : 
-                                                'over the last 365 days'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoading ? (
-                <div className="h-full flex items-center justify-center">
-                  <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : analyticsData?.topProducts && analyticsData.topProducts.length > 0 ? (
-                <div className="flex flex-col h-full">
-                  <ResponsiveContainer width="100%" height="85%">
-                    <BarChart
-                      layout="vertical"
-                      data={formatTopProductsData()}
-                      margin={{ top: 10, right: 30, left: 40, bottom: 5 }}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-80">
+            {isLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : analyticsData && analyticsData.revenueByCategory.length > 0 ? (
+              <div className="flex flex-col h-full">
+                <ResponsiveContainer width="100%" height="85%">
+                  <PieChart>
+                    <Pie
+                      data={formatCategoryData().map((item, index) => ({
+                        name: item.category,
+                        value: item.revenue,
+                        colorIndex: index,
+                        _tooltipTitle: "Category",
+                        fill: COLORS[index % COLORS.length],
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      dataKey="value"
+                      nameKey="name"
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        type="number" 
-                        tick={{ ...CHART_TEXT_STYLE }} 
-                      />
-                      <YAxis 
-                        type="category" 
-                        dataKey="name" 
-                        tick={{ ...CHART_TEXT_STYLE }}
-                        width={120}
-                      />
-                      <Tooltip 
-                        labelFormatter={(name) => `Product: ${name}`}
-                        content={<CustomTooltip />}
-                      />
-                      <Legend />
-                      <Bar 
-                        dataKey="revenue" 
-                        name="Revenue (₱)" 
-                        fill="#8884d8" 
-                        radius={[0, 4, 4, 0]} 
-                      />
-                      <Bar 
-                        dataKey="quantity" 
-                        name="Quantity" 
-                        fill="#82ca9d" 
-                        radius={[0, 4, 4, 0]} 
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {getPeriodDateRange(selectedPeriod)}
-                    {/* Add note for partial month data */}
-                    {selectedPeriod === 'year' && (
-                      <div className="mt-1">
-                        † Includes current month (partial data)
-                      </div>
-                    )}
-                  </div>
+                      {formatCategoryData().map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]} 
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      formatter={(value, name, props) => {
+                        // This helps ensure the color is passed correctly
+                        return [value, name, { color: props.fill }];
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {getPeriodDateRange(selectedPeriod)}
+                  {/* Add note for partial month data */}
+                  {selectedPeriod === 'year' && (
+                    <div className="mt-1">
+                      † Includes current month (partial data)
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center">
-                  <p className="text-muted-foreground">No product data available</p>
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                No data available for this period
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Revenue by Payment Method Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue by Payment Method</CardTitle>
+            <CardDescription>
+              Sales distribution by payment method {selectedPeriod === 'day' ? 'today' : 
+                                                  selectedPeriod === 'week' ? 'over the last 7 days' : 
+                                                  selectedPeriod === 'month' ? 'over the last 30 days' : 
+                                                  'over the last 365 days'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-80">
+            {isLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : analyticsData && analyticsData.revenueByPaymentMethod.length > 0 ? (
+              <div className="flex flex-col h-full">
+                <ResponsiveContainer width="100%" height="85%">
+                  <PieChart>
+                    <Pie
+                      data={formatPaymentMethodData().map((item, index) => ({
+                        name: item.method,
+                        value: item.revenue,
+                        colorIndex: index,
+                        _tooltipTitle: "Payment Method",
+                        fill: COLORS[index % COLORS.length],
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      dataKey="value"
+                      nameKey="name"
+                    >
+                      {formatPaymentMethodData().map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]} 
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      formatter={(value, name, props) => {
+                        // This helps ensure the color is passed correctly
+                        return [value, name, { color: props.fill }];
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {getPeriodDateRange(selectedPeriod)}
+                  {/* Add note for partial month data */}
+                  {selectedPeriod === 'year' && (
+                    <div className="mt-1">
+                      † Includes current month (partial data)
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                No data available for this period
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Products Chart */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Top Products</CardTitle>
+            <CardDescription>
+              Best selling products by revenue {selectedPeriod === 'day' ? 'today' : 
+                                              selectedPeriod === 'week' ? 'over the last 7 days' : 
+                                              selectedPeriod === 'month' ? 'over the last 30 days' : 
+                                              'over the last 365 days'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-80">
+            {isLoading ? (
+              <div className="h-full flex items-center justify-center">
+                <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : analyticsData?.topProducts && analyticsData.topProducts.length > 0 ? (
+              <div className="flex flex-col h-full">
+                <ResponsiveContainer width="100%" height="85%">
+                  <BarChart
+                    layout="vertical"
+                    data={formatTopProductsData()}
+                    margin={{ top: 10, right: 30, left: 40, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      type="number" 
+                      tick={{ ...CHART_TEXT_STYLE }} 
+                    />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      tick={{ ...CHART_TEXT_STYLE }}
+                      width={120}
+                    />
+                    <Tooltip 
+                      labelFormatter={(name) => `Product: ${name}`}
+                      content={<CustomTooltip />}
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="revenue" 
+                      name="Revenue (₱)" 
+                      fill="#8884d8" 
+                      radius={[0, 4, 4, 0]} 
+                    />
+                    <Bar 
+                      dataKey="quantity" 
+                      name="Quantity" 
+                      fill="#82ca9d" 
+                      radius={[0, 4, 4, 0]} 
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {getPeriodDateRange(selectedPeriod)}
+                  {/* Add note for partial month data */}
+                  {selectedPeriod === 'year' && (
+                    <div className="mt-1">
+                      † Includes current month (partial data)
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center">
+                <p className="text-muted-foreground">No product data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function AnalyticsPage() {
+  return (
+    <AdminLayout>
+      <Suspense fallback={
+        <div className="py-6">
+          <Card className="mb-6">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl font-bold">Analytics Dashboard</CardTitle>
+              <CardDescription>
+                Loading analytics data...
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="col-span-1">
+                    <CardHeader className="p-4 pb-2">
+                      <Skeleton className="h-4 w-32" />
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <Skeleton className="h-8 w-24 mb-2" />
+                      <Skeleton className="h-4 w-16" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
-      </div>
+      }>
+        <AnalyticsContent />
+      </Suspense>
     </AdminLayout>
   );
 } 

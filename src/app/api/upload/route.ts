@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import cloudinary from "@/lib/cloudinary";
 import { Readable } from "stream";
-
-const prisma = new PrismaClient();
+import { db } from "@/lib/db";
 
 // Define allowed file types
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
@@ -34,7 +32,7 @@ export async function POST(request: NextRequest) {
     console.log(`User authenticated: ${session.user.email}`);
     
     // Get user from the database to check role
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { id: session.user.id },
     });
 

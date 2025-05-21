@@ -29,13 +29,13 @@ export default async function EditProductPage({
     redirect("/");
   }
 
-  // Await params to fix the warnings
-  const resolvedParams = await params;
+  // Remove the awaiting of params
+  const productId = params.id;
   
   // Get product details with cache busting
   const cacheParam = Date.now();
   const product = await db.product.findUnique({
-    where: { id: resolvedParams.id },
+    where: { id: productId },
     include: {
       addons: true
     }

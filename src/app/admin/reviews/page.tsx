@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -81,7 +81,8 @@ interface Review {
   };
 }
 
-export default function AdminReviewsPage() {
+// Component that uses useSearchParams
+function ReviewsContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -369,8 +370,8 @@ export default function AdminReviewsPage() {
           value={currentTab}
           onValueChange={setCurrentTab}
         >
-          <TabsList className="mb-4">
-            <TabsTrigger value="pending" className="relative">
+          <TabsList className="mb-4 grid grid-cols-3 h-auto p-1 w-full max-w-md">
+            <TabsTrigger value="pending" className="relative py-2 data-[state=active]:bg-primary/10">
               Pending
               {reviews.pending.length > 0 && (
                 <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
@@ -378,7 +379,7 @@ export default function AdminReviewsPage() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="approved">
+            <TabsTrigger value="approved" className="relative py-2 data-[state=active]:bg-primary/10">
               Approved
               {reviews.approved.length > 0 && (
                 <Badge variant="outline" className="ml-2">
@@ -386,7 +387,7 @@ export default function AdminReviewsPage() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="rejected">
+            <TabsTrigger value="rejected" className="relative py-2 data-[state=active]:bg-primary/10">
               Rejected
               {reviews.rejected.length > 0 && (
                 <Badge variant="outline" className="ml-2">
@@ -484,7 +485,17 @@ export default function AdminReviewsPage() {
                 </div>
               ) : (
                 <div className="py-16 text-center">
-                  <p className="text-muted-foreground">No pending reviews to moderate</p>
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="p-4 rounded-full bg-muted">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
+                        <path d="M17.5 21H9a7 7 0 1 1 0-14h12" />
+                        <path d="M14 7h5v5" />
+                        <path d="M14 12V7" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-medium">No pending reviews to moderate</p>
+                    <p className="text-muted-foreground">All reviews have been handled</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -566,7 +577,16 @@ export default function AdminReviewsPage() {
                 </div>
               ) : (
                 <div className="py-16 text-center">
-                  <p className="text-muted-foreground">No approved reviews found</p>
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="p-4 rounded-full bg-muted">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-medium">No approved reviews found</p>
+                    <p className="text-muted-foreground">There are no approved reviews yet</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -660,7 +680,17 @@ export default function AdminReviewsPage() {
                 </div>
               ) : (
                 <div className="py-16 text-center">
-                  <p className="text-muted-foreground">No rejected reviews found</p>
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="p-4 rounded-full bg-muted">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-muted-foreground">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-medium">No rejected reviews found</p>
+                    <p className="text-muted-foreground">There are no rejected reviews yet</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -896,5 +926,34 @@ function ReviewTableSkeleton() {
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function AdminReviewsPage() {
+  return (
+    <AdminLayout>
+      <Suspense fallback={
+        <div className="container py-6">
+          <div className="flex flex-col space-y-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold">Loading Reviews...</h1>
+            </div>
+            <Tabs defaultValue="pending" className="w-full">
+              <TabsList>
+                <TabsTrigger value="pending">Pending</TabsTrigger>
+                <TabsTrigger value="approved">Approved</TabsTrigger>
+                <TabsTrigger value="rejected">Rejected</TabsTrigger>
+              </TabsList>
+              <TabsContent value="pending" className="mt-4">
+                <ReviewTableSkeleton />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      }>
+        <ReviewsContent />
+      </Suspense>
+    </AdminLayout>
   );
 } 

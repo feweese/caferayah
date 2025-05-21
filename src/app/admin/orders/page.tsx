@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -73,7 +73,8 @@ type Order = {
   pointsUsed?: number;
 };
 
-export default function AdminOrdersPage() {
+// Component that uses useSearchParams
+function OrderContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -419,75 +420,89 @@ export default function AdminOrdersPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x">
             <Link href={`/admin/orders${searchParams.userId ? `?userId=${searchParams.userId}` : ''}`} className="group hover:bg-muted/20 transition-colors p-4">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground text-sm">
-                  {searchParams.userId ? "User's Orders" : "All Orders"}
-                </span>
-                <Badge variant="outline">
-                  <Package className="h-3.5 w-3.5 mr-1" /> Total
-                </Badge>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">
+                    {searchParams.userId ? "User's Orders" : "All Orders"}
+                  </span>
+                  <Badge variant="outline" className="whitespace-nowrap">
+                    <Package className="h-3.5 w-3.5 mr-1" /> Total
+                  </Badge>
+                </div>
+                <p className="text-3xl font-bold">{allOrdersCount}</p>
               </div>
-              <p className="text-3xl font-bold">{allOrdersCount}</p>
             </Link>
             
             <Link href={`/admin/orders?status=received${searchParams.userId ? `&userId=${searchParams.userId}` : ''}`} className={`group hover:bg-muted/20 transition-colors p-4 ${searchParams.status === "received" ? "bg-muted/20" : ""}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground text-sm">Received</span>
-                <Badge className="bg-blue-100 text-blue-800">
-                  Needs Attention
-                </Badge>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">Received</span>
+                  <Badge className="bg-blue-100 text-blue-800 whitespace-nowrap">
+                    Needs Attention
+                  </Badge>
+                </div>
+                <p className="text-3xl font-bold">{receivedCount}</p>
               </div>
-              <p className="text-3xl font-bold">{receivedCount}</p>
             </Link>
             
             <Link href={`/admin/orders?status=preparing${searchParams.userId ? `&userId=${searchParams.userId}` : ''}`} className={`group hover:bg-muted/20 transition-colors p-4 ${searchParams.status === "preparing" ? "bg-muted/20" : ""}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground text-sm">Preparing</span>
-                <Badge className="bg-yellow-100 text-yellow-800">
-                  In Progress
-                </Badge>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">Preparing</span>
+                  <Badge className="bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                    In Progress
+                  </Badge>
+                </div>
+                <p className="text-3xl font-bold">{preparingCount}</p>
               </div>
-              <p className="text-3xl font-bold">{preparingCount}</p>
             </Link>
             
             <Link href={`/admin/orders?status=out_for_delivery${searchParams.userId ? `&userId=${searchParams.userId}` : ''}`} className={`group hover:bg-muted/20 transition-colors p-4 ${searchParams.status === "out_for_delivery" ? "bg-muted/20" : ""}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground text-sm">Out for Delivery</span>
-                <Badge className="bg-purple-100 text-purple-800">
-                  On the Way
-                </Badge>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">Out for Delivery</span>
+                  <Badge className="bg-purple-100 text-purple-800 whitespace-nowrap">
+                    On the Way
+                  </Badge>
+                </div>
+                <p className="text-3xl font-bold">{outForDeliveryCount}</p>
               </div>
-              <p className="text-3xl font-bold">{outForDeliveryCount}</p>
             </Link>
             
             <Link href={`/admin/orders?status=ready_for_pickup${searchParams.userId ? `&userId=${searchParams.userId}` : ''}`} className={`group hover:bg-muted/20 transition-colors p-4 ${searchParams.status === "ready_for_pickup" ? "bg-muted/20" : ""}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground text-sm">Ready for Pickup</span>
-                <Badge className="bg-indigo-100 text-indigo-800">
-                  Ready for Pickup
-                </Badge>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">Ready for Pickup</span>
+                  <Badge className="bg-indigo-100 text-indigo-800 whitespace-nowrap">
+                    Ready for Pickup
+                  </Badge>
+                </div>
+                <p className="text-3xl font-bold">{readyForPickupCount}</p>
               </div>
-              <p className="text-3xl font-bold">{readyForPickupCount}</p>
             </Link>
             
             <Link href={`/admin/orders?status=completed${searchParams.userId ? `&userId=${searchParams.userId}` : ''}`} className={`group hover:bg-muted/20 transition-colors p-4 ${searchParams.status === "completed" ? "bg-muted/20" : ""}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground text-sm">Completed</span>
-                <Badge className="bg-teal-100 text-teal-800">
-                  Fulfilled
-                </Badge>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">Completed</span>
+                  <Badge className="bg-teal-100 text-teal-800 whitespace-nowrap">
+                    Fulfilled
+                  </Badge>
+                </div>
+                <p className="text-3xl font-bold">{completedCount}</p>
               </div>
-              <p className="text-3xl font-bold">{completedCount}</p>
             </Link>
             
             <Link href={`/admin/orders?status=cancelled${searchParams.userId ? `&userId=${searchParams.userId}` : ''}`} className={`group hover:bg-muted/20 transition-colors p-4 ${searchParams.status === "cancelled" ? "bg-muted/20" : ""}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground text-sm">Cancelled</span>
-                <Badge className="bg-red-100 text-red-800">
-                  Cancelled
-                </Badge>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">Cancelled</span>
+                  <Badge className="bg-red-100 text-red-800 whitespace-nowrap">
+                    Cancelled
+                  </Badge>
+                </div>
+                <p className="text-3xl font-bold">{cancelledCount}</p>
               </div>
-              <p className="text-3xl font-bold">{cancelledCount}</p>
             </Link>
           </div>
         </div>
@@ -906,5 +921,30 @@ function OrderSkeleton({ withCustomer = true }: { withCustomer?: boolean }) {
         </div>
       </TableCell>
     </TableRow>
+  );
+}
+
+// Main component with Suspense boundary
+export default function AdminOrdersPage() {
+  return (
+    <AdminLayout>
+      <Suspense fallback={
+        <div className="container py-10">
+          <Card>
+            <CardHeader>
+              <CardTitle>Orders</CardTitle>
+              <CardDescription>Loading order data...</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center py-8">
+                <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      }>
+        <OrderContent />
+      </Suspense>
+    </AdminLayout>
   );
 } 

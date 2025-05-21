@@ -39,10 +39,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Increase memory limit for builds
-  experimental: {
-    serverMemoryLimit: 4096,
-  },
   // Increase the timeout for builds
   staticPageGenerationTimeout: 180,
 };

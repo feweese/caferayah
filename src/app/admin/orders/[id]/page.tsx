@@ -77,9 +77,8 @@ export default async function AdminOrderDetailPage({
 }: {
   params: { id: string };
 }) {
-  // Await the params object
-  const unwrappedParams = await params;
-  const orderId = unwrappedParams.id;
+  // Remove the unnecessary awaiting of params
+  const orderId = params.id;
   
   const session = await getServerSession(authOptions);
 

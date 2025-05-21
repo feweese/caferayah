@@ -25,12 +25,12 @@ export default async function EditUserPage({
     redirect("/");
   }
 
-  // Await params to fix the warnings
-  const resolvedParams = await params;
+  // Remove the awaiting of params
+  const userId = params.id;
   
   // Get user details
   const user = await db.user.findUnique({
-    where: { id: resolvedParams.id },
+    where: { id: userId },
   });
 
   if (!user) {

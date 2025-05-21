@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -27,7 +27,8 @@ const verificationSchema = z.object({
 
 type VerificationFormValues = z.infer<typeof verificationSchema>;
 
-export default function VerifyEmailPage() {
+// Component that uses useSearchParams
+function VerifyEmailContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -318,5 +319,25 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="mx-auto w-full max-w-md p-6">
+          <div className="flex flex-col items-center text-center">
+            <div className="animate-spin mb-4">
+              <Icons.loader className="h-8 w-8 text-primary" />
+            </div>
+            <p>Loading verification page...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 } 

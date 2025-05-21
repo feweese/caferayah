@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button } from "@/components/ui/button";
@@ -284,7 +284,8 @@ interface ReportData {
   };
 }
 
-export default function ReportsPage() {
+// Component that uses useSearchParams
+function ReportsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -741,793 +742,840 @@ export default function ReportsPage() {
   };
   
   return (
-    <AdminLayout>
-      <div className="container px-0">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-start sm:items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Sales Reports</h1>
-            <p className="text-muted-foreground mt-1">
-              Generate detailed reports for sales performance analysis
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportExcel}
-              disabled={isLoading || !reportData}
-            >
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Export Excel
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportPDF}
-              disabled={isLoading || !reportData}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Export PDF
-            </Button>
-          </div>
+    <div className="container px-0">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 items-start sm:items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Sales Reports</h1>
+          <p className="text-muted-foreground mt-1">
+            Generate detailed reports for sales performance analysis
+          </p>
         </div>
         
-        {/* Report Settings */}
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Report Settings</CardTitle>
-            <CardDescription>Configure report parameters</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="report-type">Report Type</Label>
-                <Select value={reportType} onValueChange={handleReportTypeChange}>
-                  <SelectTrigger id="report-type">
-                    <SelectValue placeholder="Select report type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sales">Sales Report</SelectItem>
-                    <SelectItem value="customers">Customer Analytics</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-1">
-                <Label htmlFor="time-period">Time Period</Label>
-                <Select value={period} onValueChange={handlePeriodChange}>
-                  <SelectTrigger id="time-period">
-                    <SelectValue placeholder="Select time period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="day">Today</SelectItem>
-                    <SelectItem value="week">Last 7 Days</SelectItem>
-                    <SelectItem value="month">Last 30 Days</SelectItem>
-                    <SelectItem value="year">Last 12 Months</SelectItem>
-                    <SelectItem value="custom">Custom Range</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {period === "custom" && (
-                <>
-                  <DatePickerField
-                    selectedDate={startDate}
-                    onChange={setStartDate}
-                    label="Start Date"
-                  />
-                  <DatePickerField
-                    selectedDate={endDate}
-                    onChange={setEndDate}
-                    label="End Date"
-                  />
-                </>
-              )}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            disabled={isLoading || !reportData}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            disabled={isLoading || !reportData}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
+      </div>
+      
+      {/* Report Settings */}
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Report Settings</CardTitle>
+          <CardDescription>Configure report parameters</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="report-type">Report Type</Label>
+              <Select value={reportType} onValueChange={handleReportTypeChange}>
+                <SelectTrigger id="report-type">
+                  <SelectValue placeholder="Select report type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sales">Sales Report</SelectItem>
+                  <SelectItem value="customers">Customer Analytics</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Error message */}
-        {error && (
-          <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-6 flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5" />
-            <p>{error}</p>
+            
+            <div className="space-y-1">
+              <Label htmlFor="time-period">Time Period</Label>
+              <Select value={period} onValueChange={handlePeriodChange}>
+                <SelectTrigger id="time-period">
+                  <SelectValue placeholder="Select time period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Today</SelectItem>
+                  <SelectItem value="week">Last 7 Days</SelectItem>
+                  <SelectItem value="month">Last 30 Days</SelectItem>
+                  <SelectItem value="year">Last 12 Months</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {period === "custom" && (
+              <>
+                <DatePickerField
+                  selectedDate={startDate}
+                  onChange={setStartDate}
+                  label="Start Date"
+                />
+                <DatePickerField
+                  selectedDate={endDate}
+                  onChange={setEndDate}
+                  label="End Date"
+                />
+              </>
+            )}
           </div>
-        )}
-        
-        {/* Report content based on type */}
-        {reportType === "sales" ? (
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="summary">Summary</TabsTrigger>
-              <TabsTrigger value="daily">Daily Sales</TabsTrigger>
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              <TabsTrigger value="payment">Payment Methods</TabsTrigger>
-              <TabsTrigger value="products">Product Performance</TabsTrigger>
-            </TabsList>
-            
-            {/* Summary tab */}
-            <TabsContent value="summary" className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                {/* Total Orders Card */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Orders
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {isLoading ? (
-                      <Skeleton className="h-10 w-1/2" />
-                    ) : (
-                      <>
-                        <div className="text-3xl font-bold">
-                          {reportData?.currentPeriod.totalOrders || 0}
-                        </div>
-                        {reportData?.comparison && (
-                          <div className="mt-2">
-                            {formatChange(reportData.comparison.totalOrdersChange)}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Total Revenue Card */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Revenue
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {isLoading ? (
-                      <Skeleton className="h-10 w-1/2" />
-                    ) : (
-                      <>
-                        <div className="text-3xl font-bold">
-                          {reportData ? formatCurrency(reportData.currentPeriod.totalRevenue) : "₱0.00"}
-                        </div>
-                        {reportData?.comparison && (
-                          <div className="mt-2">
-                            {formatChange(reportData.comparison.totalRevenueChange)}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Completed Orders Card */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Completed Orders
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {isLoading ? (
-                      <Skeleton className="h-10 w-1/2" />
-                    ) : (
-                      <>
-                        <div className="text-3xl font-bold">
-                          {reportData?.currentPeriod.completedOrders || 0}
-                        </div>
-                        {reportData?.comparison && (
-                          <div className="mt-2">
-                            {formatChange(reportData.comparison.completedOrdersChange)}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Average Order Value Card */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Average Order Value
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {isLoading ? (
-                      <Skeleton className="h-10 w-1/2" />
-                    ) : (
-                      <>
-                        <div className="text-3xl font-bold">
-                          {reportData ? formatCurrency(reportData.currentPeriod.averageOrderValue) : "₱0.00"}
-                        </div>
-                        {reportData?.comparison && (
-                          <div className="mt-2">
-                            {formatChange(reportData.comparison.averageOrderValueChange)}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Period Comparison */}
-              {reportData?.comparisonPeriod && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-md">Period Comparison</CardTitle>
-                    <CardDescription>
-                      {period === "year" ? (
-                        // For year period, show month/year format
-                        <>
-                          Comparing {format(new Date(reportData.currentPeriod.startDate), "MMM yyyy")} - {format(new Date(reportData.currentPeriod.endDate), "MMM yyyy")} with {format(new Date(reportData.comparisonPeriod.startDate), "MMM yyyy")} - {format(new Date(reportData.comparisonPeriod.endDate), "MMM yyyy")}
-                        </>
-                      ) : period === "day" ? (
-                        // For day (Today), show the specific day with hours
-                        <>
-                          Comparing {format(new Date(reportData.currentPeriod.startDate), "MMM dd, yyyy")} with {format(new Date(reportData.comparisonPeriod.startDate), "MMM dd, yyyy")}
-                        </>
-                      ) : (
-                        // Default format for week, month, and custom
-                        <>
-                          Comparing {format(new Date(reportData.currentPeriod.startDate), "MMM dd, yyyy")} - {format(new Date(reportData.currentPeriod.endDate), "MMM dd, yyyy")} with {format(new Date(reportData.comparisonPeriod.startDate), "MMM dd, yyyy")} - {format(new Date(reportData.comparisonPeriod.endDate), "MMM dd, yyyy")}
-                        </>
-                      )}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Revenue Comparison Chart */}
-                      <div className="h-80">
-                        <h3 className="text-sm font-medium mb-4">Revenue Comparison</h3>
-                        {isLoading ? (
-                          <div className="h-full flex items-center justify-center">
-                            <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : reportData?.currentPeriod?.dailySales && reportData.currentPeriod.dailySales.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart
-                              margin={period === "year" ? 
-                                { top: 20, right: 30, left: 20, bottom: 30 } : 
-                                { top: 20, right: 30, left: 20, bottom: 5 }
-                              }
-                              syncId="periodComparison"
-                            >
-                              <CartesianGrid 
-                                strokeDasharray="3 3" 
-                                // Reduce grid density for year view
-                                horizontal={period === "year" ? 6 : true}
-                                vertical={period === "year" ? false : true}
-                              />
-                              <XAxis 
-                                dataKey="date" 
-                                tick={{ 
-                                  fontSize: period === "year" ? 10 : 12,
-                                  angle: period === "year" ? -30 : 0,
-                                  textAnchor: period === "year" ? "end" : "middle",
-                                  dy: period === "year" ? 8 : 0
-                                }}
-                                tickFormatter={safeTickFormatter}
-                                interval={getDateDisplaySettings().interval}
-                                allowDuplicatedCategory={false}
-                              />
-                              <YAxis 
-                                tickFormatter={(value) => `₱${value}`}
-                                tick={{ fontSize: 12 }}
-                              />
-                              <Tooltip 
-                                content={<CustomTooltip chartType="revenue" currentPeriod={period} />}
-                                labelFormatter={(value) => safeTickFormatter(value)}
-                              />
-                              <Legend 
-                                layout="horizontal"
-                                verticalAlign="bottom"
-                                align="center"
-                                wrapperStyle={{
-                                  paddingTop: 10,
-                                  paddingBottom: 5,
-                                  marginTop: 5
-                                }}
-                                iconType="circle"
-                                iconSize={8}
-                                margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
-                              />
-                              <Area
-                                type="monotone"
-                                name="Current Revenue"
-                                data={prepareAlignedComparisonData().current}
-                                dataKey="revenue"
-                                stroke="#4285F4"
-                                fill="#4285F4"
-                                fillOpacity={0.3}
-                                strokeWidth={2}
-                                dot={{ r: 3 }}
-                                activeDot={{ r: 8 }}
-                              />
-                              {reportData.comparisonPeriod && reportData.comparisonPeriod.dailySales && reportData.comparisonPeriod.dailySales.length > 0 && (
-                                <Area
-                                  type="monotone"
-                                  name="Previous Revenue"
-                                  data={prepareAlignedComparisonData().previous}
-                                  dataKey="revenue"
-                                  stroke="#8884d8"
-                                  fill="#8884d8"
-                                  fillOpacity={0.1}
-                                  strokeWidth={2}
-                                  strokeDasharray="5 5"
-                                  dot={{ r: 2 }}
-                                />
-                              )}
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <div className="h-full flex items-center justify-center text-muted-foreground">
-                            No revenue data available for this period
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Orders Comparison Chart */}
-                      <div className="h-80">
-                        <h3 className="text-sm font-medium mb-4">Orders Comparison</h3>
-                        {isLoading ? (
-                          <div className="h-full flex items-center justify-center">
-                            <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : reportData?.currentPeriod?.dailySales && reportData.currentPeriod.dailySales.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart
-                              margin={period === "year" ? 
-                                { top: 20, right: 30, left: 20, bottom: 30 } : 
-                                { top: 20, right: 30, left: 20, bottom: 5 }
-                              }
-                              syncId="periodComparison"
-                            >
-                              <CartesianGrid 
-                                strokeDasharray="3 3" 
-                                // Reduce grid density for year view
-                                horizontal={period === "year" ? 6 : true}
-                                vertical={period === "year" ? false : true}
-                              />
-                              <XAxis 
-                                dataKey="date" 
-                                tick={{ 
-                                  fontSize: period === "year" ? 10 : 12,
-                                  angle: period === "year" ? -30 : 0,
-                                  textAnchor: period === "year" ? "end" : "middle",
-                                  dy: period === "year" ? 8 : 0
-                                }}
-                                tickFormatter={safeTickFormatter}
-                                interval={getDateDisplaySettings().interval}
-                                allowDuplicatedCategory={false}
-                              />
-                              <YAxis
-                                tick={{ fontSize: 12 }}
-                                allowDecimals={false}
-                              />
-                              <Tooltip 
-                                content={<CustomTooltip chartType="orders" currentPeriod={period} />}
-                                labelFormatter={(value) => safeTickFormatter(value)}
-                              />
-                              <Legend 
-                                layout="horizontal"
-                                verticalAlign="bottom"
-                                align="center"
-                                wrapperStyle={{
-                                  paddingTop: 10,
-                                  paddingBottom: 5,
-                                  marginTop: 5
-                                }}
-                                iconType="circle"
-                                iconSize={8}
-                                margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
-                              />
-                              {/* Current period orders */}
-                              <Area
-                                type="monotone"
-                                name="Current Orders"
-                                data={prepareAlignedComparisonData().current}
-                                dataKey="orders"
-                                stroke="#34A853"
-                                fill="#34A853"
-                                fillOpacity={0.3}
-                                strokeWidth={2}
-                                dot={{ r: 3 }}
-                                activeDot={{ r: 8 }}
-                              />
-                              {/* Comparison period orders - ensure we're using the aligned data */}
-                              {reportData.comparisonPeriod && reportData.comparisonPeriod.dailySales && reportData.comparisonPeriod.dailySales.length > 0 && (
-                                <Area
-                                  type="monotone"
-                                  name="Previous Orders"
-                                  data={prepareAlignedComparisonData().previous}
-                                  dataKey="orders" 
-                                  stroke="#FBBC05"
-                                  fill="#FBBC05"
-                                  fillOpacity={0.1}
-                                  strokeWidth={2}
-                                  strokeDasharray="5 5"
-                                  dot={{ r: 2 }}
-                                />
-                              )}
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <div className="h-full flex items-center justify-center text-muted-foreground">
-                            No orders data available for this period
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-            
-            {/* Daily Sales tab */}
-            <TabsContent value="daily">
-              <Card className="col-span-4">
-                <CardHeader>
-                  <CardTitle>Daily Sales</CardTitle>
-                  <CardDescription>
-                    Revenue and order trends over time
-                  </CardDescription>
+        </CardContent>
+      </Card>
+      
+      {/* Error message */}
+      {error && (
+        <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-6 flex items-center space-x-2">
+          <AlertTriangle className="h-5 w-5" />
+          <p>{error}</p>
+        </div>
+      )}
+      
+      {/* Report content based on type */}
+      {reportType === "sales" ? (
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="daily">Daily Sales</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="payment">Payment Methods</TabsTrigger>
+            <TabsTrigger value="products">Product Performance</TabsTrigger>
+          </TabsList>
+          
+          {/* Summary tab */}
+          <TabsContent value="summary" className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {/* Total Orders Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Orders
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {isLoading ? (
-                    <Skeleton className="h-80 w-full" />
-                  ) : reportData?.currentPeriod.dailySales && reportData.currentPeriod.dailySales.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={350}>
-                      <AreaChart
-                        data={reportData.currentPeriod.dailySales}
-                        margin={{
-                          top: 5,
-                          right: 30,
-                          left: 20,
-                          bottom: 5,
-                        }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="date" 
-                          tick={{ fontSize: 12 }}
-                          tickFormatter={safeTickFormatter}
-                          interval={getDateDisplaySettings().interval}
-                          allowDuplicatedCategory={false}
-                        />
-                        <YAxis yAxisId="left" orientation="left" tick={{ fontSize: 12 }} />
-                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
-                        <Tooltip 
-                          content={<CustomTooltip chartType="revenue" currentPeriod={period} />}
-                          labelFormatter={(value) => safeTickFormatter(value)}
-                        />
-                        <Legend 
-                          layout="horizontal"
-                          verticalAlign="bottom"
-                          align="center"
-                          wrapperStyle={{
-                            paddingTop: 10,
-                            paddingBottom: 5,
-                            marginTop: 5
-                          }}
-                          iconType="circle"
-                          iconSize={8}
-                          margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
-                        />
-                        <Area
-                          yAxisId="left"
-                          type="monotone"
-                          name="Revenue"
-                          dataKey="revenue"
-                          stroke="#4285F4"
-                          fill="#4285F4"
-                          fillOpacity={0.3}
-                          activeDot={{ r: 8 }}
-                        />
-                        <Area
-                          yAxisId="right"
-                          type="monotone"
-                          name="Orders"
-                          dataKey="orders"
-                          stroke="#34A853"
-                          fill="#34A853"
-                          fillOpacity={0.3}
-                        />
-                        {reportData?.comparisonPeriod && reportData.comparisonPeriod.dailySales && reportData.comparisonPeriod.dailySales.length > 0 && (
-                          <>
-                            <Area
-                              yAxisId="left"
-                              type="monotone"
-                              name="Previous Revenue"
-                              dataKey="revenue"
-                              data={prepareAlignedComparisonData().previous}
-                              stroke="#8884d8"
-                              fill="#8884d8"
-                              fillOpacity={0.1}
-                              strokeDasharray="5 5"
-                              key="prev-revenue"
-                            />
-                            <Area
-                              yAxisId="right"
-                              type="monotone"
-                              name="Previous Orders"
-                              dataKey="orders"
-                              data={prepareAlignedComparisonData().previous}
-                              stroke="#FBBC05"
-                              fill="#FBBC05"
-                              fillOpacity={0.1}
-                              strokeDasharray="5 5"
-                              key="prev-orders"
-                            />
-                          </>
-                        )}
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <Skeleton className="h-10 w-1/2" />
                   ) : (
-                    <div className="h-80 w-full flex items-center justify-center text-muted-foreground">
-                      No sales data available for this period
-                    </div>
+                    <>
+                      <div className="text-3xl font-bold">
+                        {reportData?.currentPeriod.totalOrders || 0}
+                      </div>
+                      {reportData?.comparison && (
+                        <div className="mt-2">
+                          {formatChange(reportData.comparison.totalOrdersChange)}
+                        </div>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
+              
+              {/* Total Revenue Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Revenue
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <Skeleton className="h-10 w-1/2" />
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold">
+                        {reportData ? formatCurrency(reportData.currentPeriod.totalRevenue) : "₱0.00"}
+                      </div>
+                      {reportData?.comparison && (
+                        <div className="mt-2">
+                          {formatChange(reportData.comparison.totalRevenueChange)}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Completed Orders Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Completed Orders
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <Skeleton className="h-10 w-1/2" />
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold">
+                        {reportData?.currentPeriod.completedOrders || 0}
+                      </div>
+                      {reportData?.comparison && (
+                        <div className="mt-2">
+                          {formatChange(reportData.comparison.completedOrdersChange)}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Average Order Value Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Average Order Value
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <Skeleton className="h-10 w-1/2" />
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold">
+                        {reportData ? formatCurrency(reportData.currentPeriod.averageOrderValue) : "₱0.00"}
+                      </div>
+                      {reportData?.comparison && (
+                        <div className="mt-2">
+                          {formatChange(reportData.comparison.averageOrderValueChange)}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
             
-            {/* Categories tab */}
-            <TabsContent value="categories">
+            {/* Period Comparison */}
+            {reportData?.comparisonPeriod && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Sales Revenue by Category</CardTitle>
+                  <CardTitle className="text-md">Period Comparison</CardTitle>
                   <CardDescription>
-                    Sales breakdown by product category
+                    {period === "year" ? (
+                      // For year period, show month/year format
+                      <>
+                        Comparing {format(new Date(reportData.currentPeriod.startDate), "MMM yyyy")} - {format(new Date(reportData.currentPeriod.endDate), "MMM yyyy")} with {format(new Date(reportData.comparisonPeriod.startDate), "MMM yyyy")} - {format(new Date(reportData.comparisonPeriod.endDate), "MMM yyyy")}
+                      </>
+                    ) : period === "day" ? (
+                      // For day (Today), show the specific day with hours
+                      <>
+                        Comparing {format(new Date(reportData.currentPeriod.startDate), "MMM dd, yyyy")} with {format(new Date(reportData.comparisonPeriod.startDate), "MMM dd, yyyy")}
+                      </>
+                    ) : (
+                      // Default format for week, month, and custom
+                      <>
+                        Comparing {format(new Date(reportData.currentPeriod.startDate), "MMM dd, yyyy")} - {format(new Date(reportData.currentPeriod.endDate), "MMM dd, yyyy")} with {format(new Date(reportData.comparisonPeriod.startDate), "MMM dd, yyyy")} - {format(new Date(reportData.comparisonPeriod.endDate), "MMM dd, yyyy")}
+                      </>
+                    )}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="h-80">
-                  {isLoading ? (
-                    <div className="h-full flex items-center justify-center">
-                      <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Revenue Comparison Chart */}
+                    <div className="h-80">
+                      <h3 className="text-sm font-medium mb-4">Revenue Comparison</h3>
+                      {isLoading ? (
+                        <div className="h-full flex items-center justify-center">
+                          <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : reportData?.currentPeriod?.dailySales && reportData.currentPeriod.dailySales.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart
+                            margin={period === "year" ? 
+                              { top: 20, right: 30, left: 20, bottom: 30 } : 
+                              { top: 20, right: 30, left: 20, bottom: 5 }
+                            }
+                            syncId="periodComparison"
+                          >
+                            <CartesianGrid 
+                              strokeDasharray="3 3" 
+                              // Reduce grid density for year view
+                              horizontal={period === "year" ? 6 : true}
+                              vertical={period === "year" ? false : true}
+                            />
+                            <XAxis 
+                              dataKey="date" 
+                              tick={{ 
+                                fontSize: period === "year" ? 10 : 12,
+                                angle: period === "year" ? -30 : 0,
+                                textAnchor: period === "year" ? "end" : "middle",
+                                dy: period === "year" ? 8 : 0
+                              }}
+                              tickFormatter={safeTickFormatter}
+                              interval={getDateDisplaySettings().interval}
+                              allowDuplicatedCategory={false}
+                            />
+                            <YAxis 
+                              tickFormatter={(value) => `₱${value}`}
+                              tick={{ fontSize: 12 }}
+                            />
+                            <Tooltip 
+                              content={<CustomTooltip chartType="revenue" currentPeriod={period} />}
+                              labelFormatter={(value) => safeTickFormatter(value)}
+                            />
+                            <Legend 
+                              layout="horizontal"
+                              verticalAlign="bottom"
+                              align="center"
+                              wrapperStyle={{
+                                paddingTop: 10,
+                                paddingBottom: 5,
+                                marginTop: 5
+                              }}
+                              iconType="circle"
+                              iconSize={8}
+                              margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                            />
+                            <Area
+                              type="monotone"
+                              name="Current Revenue"
+                              data={prepareAlignedComparisonData().current}
+                              dataKey="revenue"
+                              stroke="#4285F4"
+                              fill="#4285F4"
+                              fillOpacity={0.3}
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
+                              activeDot={{ r: 8 }}
+                            />
+                            {reportData.comparisonPeriod && reportData.comparisonPeriod.dailySales && reportData.comparisonPeriod.dailySales.length > 0 && (
+                              <Area
+                                type="monotone"
+                                name="Previous Revenue"
+                                data={prepareAlignedComparisonData().previous}
+                                dataKey="revenue"
+                                stroke="#8884d8"
+                                fill="#8884d8"
+                                fillOpacity={0.1}
+                                strokeWidth={2}
+                                strokeDasharray="5 5"
+                                dot={{ r: 2 }}
+                              />
+                            )}
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-muted-foreground">
+                          No revenue data available for this period
+                        </div>
+                      )}
                     </div>
-                  ) : reportData?.currentPeriod.salesByCategory && reportData.currentPeriod.salesByCategory.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        layout="vertical"
-                        data={reportData.currentPeriod.salesByCategory.sort((a, b) => b.revenue - a.revenue)}
-                        margin={{ top: 10, right: 30, left: 100, bottom: 10 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(value) => `₱${value}`} />
-                        <YAxis 
-                          type="category" 
-                          dataKey="category" 
-                          width={90}
-                          tickFormatter={formatCategoryName}
+                    
+                    {/* Orders Comparison Chart */}
+                    <div className="h-80">
+                      <h3 className="text-sm font-medium mb-4">Orders Comparison</h3>
+                      {isLoading ? (
+                        <div className="h-full flex items-center justify-center">
+                          <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : reportData?.currentPeriod?.dailySales && reportData.currentPeriod.dailySales.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart
+                            margin={period === "year" ? 
+                              { top: 20, right: 30, left: 20, bottom: 30 } : 
+                              { top: 20, right: 30, left: 20, bottom: 5 }
+                            }
+                            syncId="periodComparison"
+                          >
+                            <CartesianGrid 
+                              strokeDasharray="3 3" 
+                              // Reduce grid density for year view
+                              horizontal={period === "year" ? 6 : true}
+                              vertical={period === "year" ? false : true}
+                            />
+                            <XAxis 
+                              dataKey="date" 
+                              tick={{ 
+                                fontSize: period === "year" ? 10 : 12,
+                                angle: period === "year" ? -30 : 0,
+                                textAnchor: period === "year" ? "end" : "middle",
+                                dy: period === "year" ? 8 : 0
+                              }}
+                              tickFormatter={safeTickFormatter}
+                              interval={getDateDisplaySettings().interval}
+                              allowDuplicatedCategory={false}
+                            />
+                            <YAxis
+                              tick={{ fontSize: 12 }}
+                              allowDecimals={false}
+                            />
+                            <Tooltip 
+                              content={<CustomTooltip chartType="orders" currentPeriod={period} />}
+                              labelFormatter={(value) => safeTickFormatter(value)}
+                            />
+                            <Legend 
+                              layout="horizontal"
+                              verticalAlign="bottom"
+                              align="center"
+                              wrapperStyle={{
+                                paddingTop: 10,
+                                paddingBottom: 5,
+                                marginTop: 5
+                              }}
+                              iconType="circle"
+                              iconSize={8}
+                              margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                            />
+                            {/* Current period orders */}
+                            <Area
+                              type="monotone"
+                              name="Current Orders"
+                              data={prepareAlignedComparisonData().current}
+                              dataKey="orders"
+                              stroke="#34A853"
+                              fill="#34A853"
+                              fillOpacity={0.3}
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
+                              activeDot={{ r: 8 }}
+                            />
+                            {/* Comparison period orders - ensure we're using the aligned data */}
+                            {reportData.comparisonPeriod && reportData.comparisonPeriod.dailySales && reportData.comparisonPeriod.dailySales.length > 0 && (
+                              <Area
+                                type="monotone"
+                                name="Previous Orders"
+                                data={prepareAlignedComparisonData().previous}
+                                dataKey="orders" 
+                                stroke="#FBBC05"
+                                fill="#FBBC05"
+                                fillOpacity={0.1}
+                                strokeWidth={2}
+                                strokeDasharray="5 5"
+                                dot={{ r: 2 }}
+                              />
+                            )}
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-muted-foreground">
+                          No orders data available for this period
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+          
+          {/* Daily Sales tab */}
+          <TabsContent value="daily">
+            <Card className="col-span-4">
+              <CardHeader>
+                <CardTitle>Daily Sales</CardTitle>
+                <CardDescription>
+                  Revenue and order trends over time
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-80 w-full" />
+                ) : reportData?.currentPeriod.dailySales && reportData.currentPeriod.dailySales.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <AreaChart
+                      data={reportData.currentPeriod.dailySales}
+                      margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={safeTickFormatter}
+                        interval={getDateDisplaySettings().interval}
+                        allowDuplicatedCategory={false}
+                      />
+                      <YAxis yAxisId="left" orientation="left" tick={{ fontSize: 12 }} />
+                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+                      <Tooltip 
+                        content={<CustomTooltip chartType="revenue" currentPeriod={period} />}
+                        labelFormatter={(value) => safeTickFormatter(value)}
+                      />
+                      <Legend 
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
+                        wrapperStyle={{
+                          paddingTop: 10,
+                          paddingBottom: 5,
+                          marginTop: 5
+                        }}
+                        iconType="circle"
+                        iconSize={8}
+                        margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                      />
+                      <Area
+                        yAxisId="left"
+                        type="monotone"
+                        name="Revenue"
+                        dataKey="revenue"
+                        stroke="#4285F4"
+                        fill="#4285F4"
+                        fillOpacity={0.3}
+                        activeDot={{ r: 8 }}
+                      />
+                      <Area
+                        yAxisId="right"
+                        type="monotone"
+                        name="Orders"
+                        dataKey="orders"
+                        stroke="#34A853"
+                        fill="#34A853"
+                        fillOpacity={0.3}
+                      />
+                      {reportData?.comparisonPeriod && reportData.comparisonPeriod.dailySales && reportData.comparisonPeriod.dailySales.length > 0 && (
+                        <>
+                          <Area
+                            yAxisId="left"
+                            type="monotone"
+                            name="Previous Revenue"
+                            dataKey="revenue"
+                            data={prepareAlignedComparisonData().previous}
+                            stroke="#8884d8"
+                            fill="#8884d8"
+                            fillOpacity={0.1}
+                            strokeDasharray="5 5"
+                            key="prev-revenue"
+                          />
+                          <Area
+                            yAxisId="right"
+                            type="monotone"
+                            name="Previous Orders"
+                            dataKey="orders"
+                            data={prepareAlignedComparisonData().previous}
+                            stroke="#FBBC05"
+                            fill="#FBBC05"
+                            fillOpacity={0.1}
+                            strokeDasharray="5 5"
+                            key="prev-orders"
+                          />
+                        </>
+                      )}
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-80 w-full flex items-center justify-center text-muted-foreground">
+                    No sales data available for this period
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Categories tab */}
+          <TabsContent value="categories">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sales Revenue by Category</CardTitle>
+                <CardDescription>
+                  Sales breakdown by product category
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                {isLoading ? (
+                  <div className="h-full flex items-center justify-center">
+                    <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : reportData?.currentPeriod.salesByCategory && reportData.currentPeriod.salesByCategory.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      layout="vertical"
+                      data={reportData.currentPeriod.salesByCategory.sort((a, b) => b.revenue - a.revenue)}
+                      margin={{ top: 10, right: 30, left: 100, bottom: 10 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" tickFormatter={(value) => `₱${value}`} />
+                      <YAxis 
+                        type="category" 
+                        dataKey="category" 
+                        width={90}
+                        tickFormatter={formatCategoryName}
+                      />
+                      <Tooltip 
+                        content={<CustomTooltip chartType="categories" currentPeriod={period} />}
+                        labelFormatter={(value) => formatCategoryName(value)}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
+                      {reportData.comparisonPeriod && reportData.comparisonPeriod.salesByCategory && (
+                        <Bar 
+                          dataKey={(entry, index) => {
+                            const matchingCategory = reportData.comparisonPeriod?.salesByCategory.find(
+                              (item) => item.category === entry.category
+                            );
+                            return matchingCategory ? matchingCategory.revenue : 0;
+                          }}
+                          name="Previous Revenue" 
+                          fill="#dcd6f7" 
+                          stroke="#8884d8"
+                          strokeDasharray="5 5"
                         />
-                        <Tooltip 
-                          content={<CustomTooltip chartType="categories" currentPeriod={period} />}
-                          labelFormatter={(value) => formatCategoryName(value)}
+                      )}
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    No data available for this period
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Payment Methods tab */}
+          <TabsContent value="payment">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sales Revenue by Payment Method</CardTitle>
+                <CardDescription>
+                  Sales breakdown by payment method
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-96">
+                {isLoading ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : reportData?.currentPeriod.salesByPaymentMethod && reportData.currentPeriod.salesByPaymentMethod.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      layout="vertical"
+                      data={reportData.currentPeriod.salesByPaymentMethod.sort((a, b) => b.revenue - a.revenue)}
+                      margin={{ top: 10, right: 30, left: 100, bottom: 10 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" tickFormatter={(value) => `₱${value}`} />
+                      <YAxis 
+                        type="category" 
+                        dataKey="method" 
+                        width={90}
+                        tickFormatter={formatPaymentMethod}
+                      />
+                      <Tooltip 
+                        content={<CustomTooltip chartType="payment" currentPeriod={period} />}
+                        labelFormatter={(value) => formatPaymentMethod(value)}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenue" name="Revenue" fill="#82ca9d" />
+                      {reportData.comparisonPeriod && reportData.comparisonPeriod.salesByPaymentMethod && (
+                        <Bar 
+                          dataKey={(entry, index) => {
+                            const matchingMethod = reportData.comparisonPeriod?.salesByPaymentMethod.find(
+                              (item) => item.method === entry.method
+                            );
+                            return matchingMethod ? matchingMethod.revenue : 0;
+                          }}
+                          name="Previous Revenue" 
+                          fill="#d0f4de" 
+                          stroke="#82ca9d"
+                          strokeDasharray="5 5"
                         />
-                        <Legend />
-                        <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
-                        {reportData.comparisonPeriod && reportData.comparisonPeriod.salesByCategory && (
+                      )}
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    No data available for this period
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Products Performance tab */}
+          <TabsContent value="products">
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Performance</CardTitle>
+                <CardDescription>
+                  Top 10 products by revenue
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-96">
+                {isLoading ? (
+                  <div className="h-full flex items-center justify-center">
+                    <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : reportData?.currentPeriod.productPerformance && reportData.currentPeriod.productPerformance.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={formatTopProductsData()}
+                      layout="vertical"
+                      margin={{ top: 20, right: 30, left: 140, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" tickFormatter={(value) => `₱${value}`} />
+                      <YAxis type="category" dataKey="name" width={130} />
+                      <Tooltip 
+                        content={<CustomTooltip chartType="products" currentPeriod={period} />}
+                        labelFormatter={(value) => `Product: ${value}`}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
+                      <Bar dataKey="quantity" name="Quantity" fill="#82ca9d" />
+                      
+                      {reportData.comparisonPeriod && reportData.comparisonPeriod.productPerformance && (
+                        <>
                           <Bar 
                             dataKey={(entry, index) => {
-                              const matchingCategory = reportData.comparisonPeriod?.salesByCategory.find(
-                                (item) => item.category === entry.category
+                              const matchingProduct = reportData.comparisonPeriod?.productPerformance?.find(
+                                (p) => p.id === entry.id
                               );
-                              return matchingCategory ? matchingCategory.revenue : 0;
+                              return matchingProduct ? matchingProduct.revenue : 0;
                             }}
                             name="Previous Revenue" 
                             fill="#dcd6f7" 
                             stroke="#8884d8"
                             strokeDasharray="5 5"
                           />
-                        )}
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">
-                      No data available for this period
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Payment Methods tab */}
-            <TabsContent value="payment">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sales Revenue by Payment Method</CardTitle>
-                  <CardDescription>
-                    Sales breakdown by payment method
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="h-96">
-                  {isLoading ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : reportData?.currentPeriod.salesByPaymentMethod && reportData.currentPeriod.salesByPaymentMethod.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        layout="vertical"
-                        data={reportData.currentPeriod.salesByPaymentMethod.sort((a, b) => b.revenue - a.revenue)}
-                        margin={{ top: 10, right: 30, left: 100, bottom: 10 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(value) => `₱${value}`} />
-                        <YAxis 
-                          type="category" 
-                          dataKey="method" 
-                          width={90}
-                          tickFormatter={formatPaymentMethod}
-                        />
-                        <Tooltip 
-                          content={<CustomTooltip chartType="payment" currentPeriod={period} />}
-                          labelFormatter={(value) => formatPaymentMethod(value)}
-                        />
-                        <Legend />
-                        <Bar dataKey="revenue" name="Revenue" fill="#82ca9d" />
-                        {reportData.comparisonPeriod && reportData.comparisonPeriod.salesByPaymentMethod && (
                           <Bar 
                             dataKey={(entry, index) => {
-                              const matchingMethod = reportData.comparisonPeriod?.salesByPaymentMethod.find(
-                                (item) => item.method === entry.method
+                              const matchingProduct = reportData.comparisonPeriod?.productPerformance?.find(
+                                (p) => p.id === entry.id
                               );
-                              return matchingMethod ? matchingMethod.revenue : 0;
+                              return matchingProduct ? matchingProduct.quantity : 0;
                             }}
-                            name="Previous Revenue" 
+                            name="Previous Quantity" 
                             fill="#d0f4de" 
                             stroke="#82ca9d"
                             strokeDasharray="5 5"
                           />
-                        )}
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      No data available for this period
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Products Performance tab */}
-            <TabsContent value="products">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Performance</CardTitle>
-                  <CardDescription>
-                    Top 10 products by revenue
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="h-96">
-                  {isLoading ? (
-                    <div className="h-full flex items-center justify-center">
-                      <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : reportData?.currentPeriod.productPerformance && reportData.currentPeriod.productPerformance.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={formatTopProductsData()}
-                        layout="vertical"
-                        margin={{ top: 20, right: 30, left: 140, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(value) => `₱${value}`} />
-                        <YAxis type="category" dataKey="name" width={130} />
-                        <Tooltip 
-                          content={<CustomTooltip chartType="products" currentPeriod={period} />}
-                          labelFormatter={(value) => `Product: ${value}`}
-                        />
-                        <Legend />
-                        <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
-                        <Bar dataKey="quantity" name="Quantity" fill="#82ca9d" />
-                        
-                        {reportData.comparisonPeriod && reportData.comparisonPeriod.productPerformance && (
-                          <>
-                            <Bar 
-                              dataKey={(entry, index) => {
-                                const matchingProduct = reportData.comparisonPeriod?.productPerformance?.find(
-                                  (p) => p.id === entry.id
-                                );
-                                return matchingProduct ? matchingProduct.revenue : 0;
-                              }}
-                              name="Previous Revenue" 
-                              fill="#dcd6f7" 
-                              stroke="#8884d8"
-                              strokeDasharray="5 5"
-                            />
-                            <Bar 
-                              dataKey={(entry, index) => {
-                                const matchingProduct = reportData.comparisonPeriod?.productPerformance?.find(
-                                  (p) => p.id === entry.id
-                                );
-                                return matchingProduct ? matchingProduct.quantity : 0;
-                              }}
-                              name="Previous Quantity" 
-                              fill="#d0f4de" 
-                              stroke="#82ca9d"
-                              strokeDasharray="5 5"
-                            />
-                          </>
-                        )}
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">
-                      No data available for this period
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        ) : (
-          // Customer Analytics Report
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="top-customers">Top Customers</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="top-customers">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Customers by Revenue</CardTitle>
-                  <CardDescription>
-                    Customers with highest total spending
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <Skeleton className="h-4 w-1/4" />
-                          <Skeleton className="h-4 w-1/4" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : reportData?.currentPeriod.topCustomers && reportData.currentPeriod.topCustomers.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="py-3 px-2 text-left font-medium">Rank</th>
-                            <th className="py-3 px-2 text-left font-medium">Customer</th>
-                            <th className="py-3 px-2 text-left font-medium">Email</th>
-                            <th className="py-3 px-2 text-left font-medium">Orders</th>
-                            <th className="py-3 px-2 text-left font-medium">Total Spent</th>
-                            <th className="py-3 px-2 text-left font-medium">Last Order</th>
+                        </>
+                      )}
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    No data available for this period
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        // Customer Analytics Report
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="top-customers">Top Customers</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="top-customers">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Customers by Revenue</CardTitle>
+                <CardDescription>
+                  Customers with highest total spending
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-4 w-1/4" />
+                      </div>
+                    ))}
+                  </div>
+                ) : reportData?.currentPeriod.topCustomers && reportData.currentPeriod.topCustomers.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="py-3 px-2 text-left font-medium">Rank</th>
+                          <th className="py-3 px-2 text-left font-medium">Customer</th>
+                          <th className="py-3 px-2 text-left font-medium">Email</th>
+                          <th className="py-3 px-2 text-left font-medium">Orders</th>
+                          <th className="py-3 px-2 text-left font-medium">Total Spent</th>
+                          <th className="py-3 px-2 text-left font-medium">Last Order</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.currentPeriod.topCustomers.map((customer, index) => (
+                          <tr key={customer.id} className="border-b hover:bg-muted/50">
+                            <td className="py-3 px-2">{index + 1}</td>
+                            <td className="py-3 px-2">{customer.name}</td>
+                            <td className="py-3 px-2">{customer.email}</td>
+                            <td className="py-3 px-2">{customer.totalOrders}</td>
+                            <td className="py-3 px-2">{formatCurrency(customer.totalSpent)}</td>
+                            <td className="py-3 px-2">
+                              {customer.lastOrderDate ? format(new Date(customer.lastOrderDate), "MMM dd, yyyy") : "N/A"}
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {reportData.currentPeriod.topCustomers.map((customer, index) => (
-                            <tr key={customer.id} className="border-b hover:bg-muted/50">
-                              <td className="py-3 px-2">{index + 1}</td>
-                              <td className="py-3 px-2">{customer.name}</td>
-                              <td className="py-3 px-2">{customer.email}</td>
-                              <td className="py-3 px-2">{customer.totalOrders}</td>
-                              <td className="py-3 px-2">{formatCurrency(customer.totalSpent)}</td>
-                              <td className="py-3 px-2">
-                                {customer.lastOrderDate ? format(new Date(customer.lastOrderDate), "MMM dd, yyyy") : "N/A"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 text-muted-foreground">
-                      No customer data available for this period
-                    </div>
-                  )}
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-10 text-muted-foreground">
+                    No customer data available for this period
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function ReportsPage() {
+  return (
+    <AdminLayout>
+      <Suspense fallback={
+        <div className="container py-6">
+          <div className="flex flex-col space-y-6">
+            <div className="flex flex-col space-y-2">
+              <h1 className="text-3xl font-bold">Reports</h1>
+              <p className="text-muted-foreground">
+                Loading report data...
+              </p>
+            </div>
+            <div className="grid gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        <Skeleton className="h-4 w-24" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-8 w-full mb-2" />
+                      <Skeleton className="h-4 w-16" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                </CardHeader>
+                <CardContent className="h-80">
+                  <div className="flex items-center justify-center h-full">
+                    <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
-        )}
-      </div>
+            </div>
+          </div>
+        </div>
+      }>
+        <ReportsContent />
+      </Suspense>
     </AdminLayout>
   );
 } 
