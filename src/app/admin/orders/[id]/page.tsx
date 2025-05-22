@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import Image from "next/image";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, addHours } from "date-fns";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { AdminLayout } from "@/components/layout/admin-layout";
@@ -76,6 +76,14 @@ type Order = {
   paymentStatus?: string;
   paymentProofUrl?: string | null;
   // Other existing fields...
+}
+
+// Add this utility function to handle timezone conversion for server components
+function convertUTCToLocal(date: string | Date): Date {
+  const utcDate = new Date(date);
+  // Use local timezone offset to adjust the UTC date
+  const localOffset = new Date().getTimezoneOffset();
+  return addHours(utcDate, -localOffset / 60);
 }
 
 export default async function AdminOrderDetailPage({
@@ -278,26 +286,26 @@ export default async function AdminOrderDetailPage({
               <div className="flex items-center gap-3 text-muted-foreground mt-1">
                 <div className="flex items-center gap-1">
                   <CalendarIcon className="h-4 w-4" />
-                  <span>{format(new Date(order.createdAt), "MMM d, yyyy")}</span>
+                  <span>{format(convertUTCToLocal(order.createdAt), "MMM d, yyyy")}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  <span>{format(new Date(order.createdAt), "h:mm a")}</span>
+                  <span>{format(convertUTCToLocal(order.createdAt), "h:mm a")}</span>
                 </div>
                 <div className="text-xs">
-                  ({formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })})
+                  ({formatDistanceToNow(convertUTCToLocal(order.createdAt), { addSuffix: true })})
                 </div>
               </div>
               {completedAt && (
                 <div className="flex items-center gap-1 text-green-600 mt-1 text-sm">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>Completed on {format(new Date(completedAt), "MMM d, yyyy")} at {format(new Date(completedAt), "h:mm a")}</span>
+                  <span>Completed on {format(convertUTCToLocal(completedAt), "MMM d, yyyy")} at {format(convertUTCToLocal(completedAt), "h:mm a")}</span>
                 </div>
               )}
               {cancelledAt && (
                 <div className="flex items-center gap-1 text-red-600 mt-1 text-sm">
                   <XCircle className="h-4 w-4" />
-                  <span>Cancelled on {format(new Date(cancelledAt), "MMM d, yyyy")} at {format(new Date(cancelledAt), "h:mm a")}</span>
+                  <span>Cancelled on {format(convertUTCToLocal(cancelledAt), "MMM d, yyyy")} at {format(convertUTCToLocal(cancelledAt), "h:mm a")}</span>
                 </div>
               )}
             </div>
@@ -453,20 +461,20 @@ export default async function AdminOrderDetailPage({
                           if (statusValue === "RECEIVED") {
                             // Use the received status record if available, otherwise use order creation date
                             statusTime = statusRecord 
-                              ? new Date(statusRecord.createdAt) 
-                              : new Date(order.createdAt);
+                              ? convertUTCToLocal(statusRecord.createdAt) 
+                              : convertUTCToLocal(order.createdAt);
                           } else if (statusValue === "COMPLETED" && order.status === "COMPLETED") {
                             // For COMPLETED status, use history record if available, otherwise fall back to completedAt field
                             statusTime = statusRecord 
-                              ? new Date(statusRecord.createdAt) 
-                              : (order.completedAt ? new Date(order.completedAt) : null);
+                              ? convertUTCToLocal(statusRecord.createdAt) 
+                              : (order.completedAt ? convertUTCToLocal(order.completedAt) : null);
                           } else if (statusValue === "CANCELLED" && order.status === "CANCELLED") {
                             // For CANCELLED status, use history record if available, otherwise fall back to cancelledAt field
                             statusTime = statusRecord 
-                              ? new Date(statusRecord.createdAt) 
-                              : (order.cancelledAt ? new Date(order.cancelledAt) : null);
+                              ? convertUTCToLocal(statusRecord.createdAt) 
+                              : (order.cancelledAt ? convertUTCToLocal(order.cancelledAt) : null);
                           } else if (statusRecord) {
-                            statusTime = new Date(statusRecord.createdAt);
+                            statusTime = convertUTCToLocal(statusRecord.createdAt);
                           }
                           
                           return (
@@ -529,20 +537,20 @@ export default async function AdminOrderDetailPage({
                           if (statusValue === "RECEIVED") {
                             // Use the received status record if available, otherwise use order creation date
                             statusTime = statusRecord 
-                              ? new Date(statusRecord.createdAt) 
-                              : new Date(order.createdAt);
+                              ? convertUTCToLocal(statusRecord.createdAt) 
+                              : convertUTCToLocal(order.createdAt);
                           } else if (statusValue === "COMPLETED" && order.status === "COMPLETED") {
                             // For COMPLETED status, use history record if available, otherwise fall back to completedAt field
                             statusTime = statusRecord 
-                              ? new Date(statusRecord.createdAt) 
-                              : (order.completedAt ? new Date(order.completedAt) : null);
+                              ? convertUTCToLocal(statusRecord.createdAt) 
+                              : (order.completedAt ? convertUTCToLocal(order.completedAt) : null);
                           } else if (statusValue === "CANCELLED" && order.status === "CANCELLED") {
                             // For CANCELLED status, use history record if available, otherwise fall back to cancelledAt field
                             statusTime = statusRecord 
-                              ? new Date(statusRecord.createdAt) 
-                              : (order.cancelledAt ? new Date(order.cancelledAt) : null);
+                              ? convertUTCToLocal(statusRecord.createdAt) 
+                              : (order.cancelledAt ? convertUTCToLocal(order.cancelledAt) : null);
                           } else if (statusRecord) {
-                            statusTime = new Date(statusRecord.createdAt);
+                            statusTime = convertUTCToLocal(statusRecord.createdAt);
                           }
                           
                           return (
