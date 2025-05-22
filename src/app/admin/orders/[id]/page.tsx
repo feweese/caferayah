@@ -278,11 +278,11 @@ export default async function AdminOrderDetailPage({
               <div className="flex items-center gap-3 text-muted-foreground mt-1">
                 <div className="flex items-center gap-1">
                   <CalendarIcon className="h-4 w-4" />
-                  <span>{format(new Date(order.createdAt), "MMM d, yyyy", { timeZone: 'UTC' })}</span>
+                  <span>{format(new Date(order.createdAt), "MMM d, yyyy")}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  <span>{format(new Date(order.createdAt), "h:mm a", { timeZone: 'UTC' })}</span>
+                  <span>{format(new Date(order.createdAt), "h:mm a")}</span>
                 </div>
                 <div className="text-xs">
                   ({formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })})
@@ -291,13 +291,13 @@ export default async function AdminOrderDetailPage({
               {completedAt && (
                 <div className="flex items-center gap-1 text-green-600 mt-1 text-sm">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>Completed on {format(new Date(completedAt), "MMM d, yyyy", { timeZone: 'UTC' })} at {format(new Date(completedAt), "h:mm a", { timeZone: 'UTC' })}</span>
+                  <span>Completed on {format(new Date(completedAt), "MMM d, yyyy")} at {format(new Date(completedAt), "h:mm a")}</span>
                 </div>
               )}
               {cancelledAt && (
                 <div className="flex items-center gap-1 text-red-600 mt-1 text-sm">
                   <XCircle className="h-4 w-4" />
-                  <span>Cancelled on {format(new Date(cancelledAt), "MMM d, yyyy", { timeZone: 'UTC' })} at {format(new Date(cancelledAt), "h:mm a", { timeZone: 'UTC' })}</span>
+                  <span>Cancelled on {format(new Date(cancelledAt), "MMM d, yyyy")} at {format(new Date(cancelledAt), "h:mm a")}</span>
                 </div>
               )}
             </div>
@@ -489,9 +489,9 @@ export default async function AdminOrderDetailPage({
                                   (statusValue === "COMPLETED" && order.status === "COMPLETED") || 
                                   (statusTime && isActive)) && (
                                   <div className="text-[10px] text-muted-foreground mt-1 text-center">
-                                    {statusTime ? format(statusTime, "MMM d", { timeZone: 'UTC' }) : ""}
+                                    {statusTime ? format(statusTime, "MMM d") : ""}
                                     <br />
-                                    {statusTime ? format(statusTime, "h:mm a", { timeZone: 'UTC' }) : ""}
+                                    {statusTime ? format(statusTime, "h:mm a") : ""}
                                   </div>
                                 )}
                               </div>
@@ -565,9 +565,9 @@ export default async function AdminOrderDetailPage({
                                   (statusValue === "COMPLETED" && order.status === "COMPLETED") || 
                                   (statusTime && isActive)) && (
                                   <div className="text-[10px] text-muted-foreground mt-1 text-center">
-                                    {statusTime ? format(statusTime, "MMM d", { timeZone: 'UTC' }) : ""}
+                                    {statusTime ? format(statusTime, "MMM d") : ""}
                                     <br />
-                                    {statusTime ? format(statusTime, "h:mm a", { timeZone: 'UTC' }) : ""}
+                                    {statusTime ? format(statusTime, "h:mm a") : ""}
                                   </div>
                                 )}
                               </div>
