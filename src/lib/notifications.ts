@@ -238,7 +238,7 @@ export async function createPaymentStatusNotification(
 export async function createLoyaltyPointsNotification(
   userId: string,
   points: number,
-  action: 'earned' | 'redeemed' | 'expired' | 'milestone',
+  action: 'earned' | 'redeemed' | 'expired' | 'milestone' | 'refunded',
   orderId?: string,
   currentTotal?: number
 ) {
@@ -268,6 +268,12 @@ export async function createLoyaltyPointsNotification(
       case 'milestone':
         title = "Loyalty Milestone Reached";
         message = `Congratulations! You now have a total of ${currentTotal} loyalty points.`;
+        break;
+      
+      case 'refunded':
+        title = "Points Refunded";
+        message = `${points} loyalty points have been refunded to your account due to order cancellation.`;
+        link = orderId ? `/orders/${orderId}` : "/profile";
         break;
       
       default:

@@ -176,12 +176,34 @@ export default function UpdateOrderStatusPage({
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to update order status");
+        
+        // Special handling for GCash payment verification requirement
+        if (error.requiresVerification) {
+          toast.error(
+            <div className="space-y-2">
+              <p>{error.message}</p>
+              <div className="pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => router.push(`/admin/orders/${orderId}`)}
+                >
+                  Go to Payment Verification
+                </Button>
+              </div>
+            </div>,
+            {
+              duration: 5000,
+            }
+          );
+        } else {
+          throw new Error(error.message || "Failed to update order status");
+        }
+      } else {
+        toast.success("Order status updated successfully");
+        router.push(`/admin/orders/${orderId}`);
+        router.refresh();
       }
-      
-      toast.success("Order status updated successfully");
-      router.push(`/admin/orders/${orderId}`);
-      router.refresh();
     } catch (error) {
       console.error("Error updating order status:", error);
       toast.error(error instanceof Error ? error.message : "Failed to update order status");

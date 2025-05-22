@@ -4,7 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { OrderStatus } from "@/generated/prisma";
-import { createOrderStatusNotification, createLoyaltyPointsNotification } from "@/lib/notifications";
+import { createOrderStatusNotification, createLoyaltyPointsNotification, createPaymentStatusNotification } from "@/lib/notifications";
 
 // Validate the request body
 const updateOrderSchema = z.object({
@@ -187,6 +187,25 @@ export async function PATCH(
       );
     }
 
+    // Check if this is a GCash payment being moved from RECEIVED to PREPARING
+    if (existingOrder.paymentMethod === "GCASH" && 
+        existingOrder.status === "RECEIVED" && 
+        status === "PREPARING") {
+      
+      // Check if payment has been verified
+      if (existingOrder.paymentStatus !== "VERIFIED") {
+        return NextResponse.json(
+          { 
+            message: "This GCash payment requires verification before the order can be prepared",
+            currentStatus: existingOrder.status,
+            paymentStatus: existingOrder.paymentStatus,
+            requiresVerification: true
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update the order
     const updatedOrder = await db.order.update({
       where: {
@@ -292,8 +311,77 @@ export async function PATCH(
         });
       }
     } else if (status === "CANCELLED") {
-      // You could add refund logic here if needed
-      // You could also update inventory or other related data
+      // Auto-reject pending GCash payments when order is cancelled
+      if (existingOrder.paymentMethod === "GCASH" && existingOrder.paymentStatus === "PENDING") {
+        // Update payment status to REJECTED
+        await db.order.update({
+          where: { id: orderId },
+          data: { 
+            paymentStatus: "REJECTED" 
+          },
+        });
+
+        // Create notification for customer about payment rejection due to cancellation
+        await createPaymentStatusNotification(
+          existingOrder.userId,
+          orderId,
+          "REJECTED",
+          "Order was cancelled before payment verification was completed."
+        );
+      }
+
+      // Refund any loyalty points that were used for this order
+      if (existingOrder.pointsUsed > 0) {
+        // Use a transaction to ensure data consistency for the points operations
+        await db.$transaction(async (tx) => {
+          // Check if loyalty points record exists
+          let loyaltyPoints = await tx.loyaltyPoints.findUnique({
+            where: {
+              userId: existingOrder.userId,
+            },
+          });
+          
+          if (loyaltyPoints) {
+            // Return the points by incrementing the user's points balance
+            await tx.loyaltyPoints.update({
+              where: {
+                userId: existingOrder.userId,
+              },
+              data: {
+                points: {
+                  increment: existingOrder.pointsUsed,
+                },
+              },
+            });
+          } else {
+            // Create a loyalty points record if it doesn't exist
+            loyaltyPoints = await tx.loyaltyPoints.create({
+              data: {
+                userId: existingOrder.userId,
+                points: existingOrder.pointsUsed,
+              },
+            });
+          }
+          
+          // Record the refund in points history
+          await tx.pointsHistory.create({
+            data: {
+              userId: existingOrder.userId,
+              action: "REFUNDED",
+              points: existingOrder.pointsUsed,
+              orderId: orderId,
+            },
+          });
+          
+          // Create notification for the user about points refund
+          await createLoyaltyPointsNotification(
+            existingOrder.userId,
+            existingOrder.pointsUsed,
+            'refunded',
+            orderId
+          );
+        });
+      }
     }
 
     return NextResponse.json({

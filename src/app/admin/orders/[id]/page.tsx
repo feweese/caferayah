@@ -49,8 +49,7 @@ import {
   X,
   AlertCircle,
   ImageIcon,
-  Banknote,
-  Store,
+  Mail,
 } from "lucide-react";
 import { 
   calculateItemTotal, 
@@ -58,6 +57,13 @@ import {
   calculateTotal, 
   formatPricePHP 
 } from "@/lib/price-utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Add this to the order type definition
 type Order = {
@@ -298,11 +304,28 @@ export default async function AdminOrderDetailPage({
             
             <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
               {order.status !== "CANCELLED" && order.status !== "COMPLETED" && (
-                <Link href={`/admin/orders/${order.id}/update`}>
-                  <Button variant="default">
-                    Update Order Status
-                  </Button>
-                </Link>
+                <>
+                  {isGCashPayment && paymentStatus === "PENDING" && order.status === "RECEIVED" ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="default" disabled className="cursor-not-allowed opacity-70">
+                            Update Order Status
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Verify GCash payment first</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <Link href={`/admin/orders/${order.id}/update`}>
+                      <Button variant="default">
+                        Update Order Status
+                      </Button>
+                    </Link>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -310,65 +333,89 @@ export default async function AdminOrderDetailPage({
         
         {/* GCash Payment Verification Section */}
         {isGCashPayment && (
-          <Card className="mb-6 border-l-4 border-l-blue-500">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-blue-500" />
-                    GCash Payment Verification
-                  </div>
-                </CardTitle>
-                <Badge className={`${paymentStatusDisplayInfo.color}`}>
-                  <span className="flex items-center gap-1">
-                    {paymentStatusDisplayInfo.icon}
-                    {paymentStatusDisplayInfo.label}
-                  </span>
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div>
-                  <h3 className="font-medium mb-2 text-sm text-muted-foreground">Payment Information</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center border-b border-border pb-2">
-                      <span className="text-sm">Status</span>
-                      <span className="font-medium">{paymentStatusDisplayInfo.label}</span>
+          <>
+            {/* Payment Verification Alert Banner */}
+            {paymentStatus === "PENDING" && order.status === "RECEIVED" && (
+              <Alert className="mb-4 border-l-4 border-l-amber-500">
+                <AlertCircle className="h-5 w-5 text-amber-500" />
+                <AlertTitle className="text-amber-700">Payment Verification Required</AlertTitle>
+                <AlertDescription className="text-amber-600">
+                  This order requires payment verification before it can be moved to the preparing stage. 
+                  Please verify the payment proof below to proceed with the order.
+                </AlertDescription>
+              </Alert>
+            )}
+            <Card className={`mb-6 border-l-4 ${order.status === "CANCELLED" ? "border-l-red-500" : "border-l-blue-500"}`}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className={`h-5 w-5 ${order.status === "CANCELLED" ? "text-red-500" : "text-blue-500"}`} />
+                      GCash Payment Verification
+                      {order.status === "CANCELLED" && 
+                        <Badge variant="destructive" className="ml-2">Order Cancelled</Badge>
+                      }
                     </div>
-                    <div className="flex justify-between items-center border-b border-border pb-2">
-                      <span className="text-sm">Amount</span>
-                      <span className="font-medium">{formatPricePHP(order.total)}</span>
-                    </div>
+                  </CardTitle>
+                  <Badge className={`${paymentStatusDisplayInfo.color}`}>
+                    <span className="flex items-center gap-1">
+                      {paymentStatusDisplayInfo.icon}
+                      {paymentStatusDisplayInfo.label}
+                    </span>
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div>
+                    <h3 className="font-medium mb-2 text-sm text-muted-foreground">Payment Information</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center border-b border-border pb-2">
+                        <span className="text-sm">Status</span>
+                        <span className="font-medium">{paymentStatusDisplayInfo.label}</span>
+                      </div>
+                      <div className="flex justify-between items-center border-b border-border pb-2">
+                        <span className="text-sm">Amount</span>
+                        <span className="font-medium">{formatPricePHP(order.total)}</span>
+                      </div>
 {/* GCash Number removed to avoid confusion */}
+                    </div>
+                  
+                    {paymentStatus === "PENDING" && order.status !== "CANCELLED" ? (
+                      <PaymentVerificationButtons orderId={order.id} orderStatus={order.status} />
+                    ) : order.status === "CANCELLED" && paymentStatus === "PENDING" ? (
+                      <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-md text-red-700">
+                        <div className="flex items-center gap-2 mb-1">
+                          <XCircle className="h-4 w-4" />
+                          <span className="font-medium">Payment Verification Not Required</span>
+                        </div>
+                        <p className="text-sm">This order has been cancelled, so payment verification is no longer needed.</p>
+                      </div>
+                    ) : null}
                   </div>
                   
-                  {paymentStatus === "PENDING" && (
-                    <PaymentVerificationButtons orderId={order.id} orderStatus={order.status} />
-                  )}
-                </div>
-                
-                <div>
-                  <h3 className="font-medium mb-2 text-sm text-muted-foreground">Payment Proof</h3>
-                  {order.paymentProofUrl ? (
-                    <div className="rounded-md border overflow-hidden bg-gray-50 relative">
-                      <PaymentProofDialog imageUrl={order.paymentProofUrl} />
-                      <div className="p-2 bg-white text-center">
-                        <span className="text-sm text-muted-foreground">
-                          Click on the image to enlarge
-                        </span>
+                  <div>
+                    <h3 className="font-medium mb-2 text-sm text-muted-foreground">Payment Proof</h3>
+                    {order.paymentProofUrl ? (
+                      <div className="rounded-md border overflow-hidden bg-gray-50 relative">
+                        <PaymentProofDialog imageUrl={order.paymentProofUrl} />
+                        <div className="p-2 bg-white text-center">
+                          <span className="text-sm text-muted-foreground">
+                            Click on the image to enlarge
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-md border p-12 flex flex-col items-center justify-center text-muted-foreground">
-                      <ImageIcon className="h-12 w-12 mb-2 opacity-20" />
-                      <p>No payment proof uploaded</p>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="rounded-md border p-12 flex flex-col items-center justify-center text-muted-foreground">
+                        <ImageIcon className="h-12 w-12 mb-2 opacity-20" />
+                        <p>No payment proof uploaded</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {/* Order Status Timeline */}
@@ -582,12 +629,12 @@ export default async function AdminOrderDetailPage({
                         </>
                       ) : order.paymentMethod === "CASH_ON_DELIVERY" ? (
                         <>
-                          <Banknote className="h-4 w-4 text-muted-foreground" />
+                          <Mail className="h-4 w-4 text-muted-foreground" />
                           Cash on Delivery
                         </>
                       ) : (
                         <>
-                          <Store className="h-4 w-4 text-muted-foreground" />
+                          <Package className="h-4 w-4 text-muted-foreground" />
                           In Store
                         </>
                       )}
